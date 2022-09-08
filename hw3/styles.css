@@ -53,10 +53,10 @@ a:hover{
     object-fit: cover;
 }
 .image{
-    width: 1400px;
-    /* margin-left: -1000px; */
-    transform: translate(-175px);
-    height : 110vh;
+    width: 1200px;
+    /* margin-left: -1000px; */;
+    transform: translateX(-10%);
+    height : 980px;
 }
 
 footer {
