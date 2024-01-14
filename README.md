@@ -5,7 +5,7 @@
 
 - 🔭 Reach Me at [LinkedIn](https://www.linkedin.com/in/balaji-chidam/)
 
-- 📄 Know about my experiences at [Resume](https://drive.google.com/file/d/1Opl5ebpfhq1cI9xW71arFfNbUEYlcomf/view?usp=sharing)
+- 📄 Know about my experiences at [Resume](https://drive.google.com/file/d/1SPgwksmhhT-NQiFSJxxFEamF_RgU4a8g/view?usp=sharing)
 
 - 💬 Ask me about **Machine Learning, Software Engineering, Data Engineering, Deep Learning and Data Science**
 
@@ -16,4 +16,4 @@
 
 <p align="center"><img align="center" src="https://github-readme-stats.vercel.app/api/top-langs?username=balachidam21&show_icons=true&locale=en&layout=compact" alt="balachidam21" /></p>
 
-<p align="center">&nbsp;<img align="center" src="https://github-readme-stats.vercel.app/api?username=balachidam21&show_icons=true&locale=en" alt="balachidam21" /></p>
+<p align="center">&nbsp;<img align="center" src="https://github-readme-stats.vercel.app/api?username=balachidam21&show_icons=true&locale=en" alt="balachidam21" /></p>     
