@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Continuous batching from scratch — Balaji Chidambaram</title>
+<meta name="description" content="Building a continuous-batching LLM inference scheduler from scratch — why iteration-level scheduling makes serving fast, with timelines and a scoreboard.">
+<meta property="og:title" content="Continuous batching from scratch">
+<meta property="og:description" content="An iteration-level scheduler, built by hand: static 10 steps / 65% utilization → continuous 6 steps / 100%, same requests served.">
+<meta property="og:type" content="article">
+<link rel="icon" href="../assets/img/icon.jpg" type="image/webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* ---- site identity (violet Poppins portfolio) ---- */
+    --violet:#6e57e0; --violet-alt:#7d6bd6; --violet-light:#c2b6fc; --violet-bg:#f0edfb;
+    --title:hsl(250,8%,15%); --text:hsl(250,9%,32%); --text-light:hsl(250,8%,55%);
+    --body:#fcfcff; --container:#ffffff; --line:#e7e4f2;
+    --sans:"Poppins",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:"SF Mono",ui-monospace,"Cascadia Code",Menlo,Consolas,monospace;
+    /* ---- diagram palette: FROZEN — the <script> reads these by name ---- */
+    --accent:#6e57e0; --accent2:#9a4a2f; --ink:#1c1c1e; --muted:#6b6b70;
+    --idle:#e3e1dc; --idle-ink:#9a978f; --none:#cfcdc7;
+    --r1:#4e79a7; --r2:#f28e2b; --r3:#59a14f; --r4:#9c6bb0; --r5:#d0494b;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--body);color:var(--text);font-family:var(--sans);
+       line-height:1.75;font-size:17px;-webkit-font-smoothing:antialiased;
+       text-rendering:optimizeLegibility}
+
+  /* ---------- top nav (matches the site) ---------- */
+  .nav{position:sticky;top:0;z-index:100;background:rgba(252,252,255,.82);
+       backdrop-filter:saturate(180%) blur(10px);border-bottom:1px solid var(--line)}
+  .nav_inner{max-width:1080px;margin:0 auto;padding:15px 24px;
+             display:flex;align-items:center;justify-content:space-between}
+  .nav_logo{font-weight:600;font-size:1.1rem;color:var(--title);text-decoration:none;letter-spacing:-.01em}
+  .nav_logo span{color:var(--violet)}
+  .nav_links{display:flex;gap:28px}
+  .nav_links a{color:var(--text);text-decoration:none;font-size:.92rem;font-weight:500;transition:color .15s}
+  .nav_links a:hover,.nav_links a.here{color:var(--violet)}
+  @media(max-width:600px){.nav_links{gap:18px}.nav_links a{font-size:.85rem}}
+
+  /* ---------- article shell ---------- */
+  .article{max-width:720px;margin:0 auto;padding:52px 24px 0}
+  .eyebrow{font-family:var(--mono);font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;
+           color:var(--violet);font-weight:600;margin-bottom:16px}
+  .post-title{font-size:2.5rem;line-height:1.14;letter-spacing:-.025em;color:var(--title);
+              font-weight:700;margin:0 0 18px}
+  .post-sub{font-size:1.17rem;line-height:1.55;color:var(--text-light);font-weight:400;margin:0 0 22px}
+  .post-sub b{color:var(--title);font-weight:600}
+  .post-meta{font-family:var(--mono);font-size:.86rem;color:var(--text-light);
+             padding-bottom:30px;border-bottom:1px solid var(--line)}
+
+  /* ---------- article typography ---------- */
+  .article p{font-size:1.07rem;line-height:1.82;margin:1.2em 0;color:var(--text)}
+  .article b{color:var(--title);font-weight:600}
+  .article em{font-style:italic}
+  .article h2{font-size:1.5rem;line-height:1.25;letter-spacing:-.015em;color:var(--title);
+              font-weight:600;margin:2.5em 0 .5em}
+  .article h2 .n{font-family:var(--mono);color:var(--violet);font-size:.66em;
+                 font-weight:600;margin-right:12px;vertical-align:1px}
+  code.inl{font-family:var(--mono);background:var(--violet-bg);color:var(--violet-alt);
+           padding:1px 6px;border-radius:5px;font-size:.85em}
+  .article a{color:var(--violet);text-decoration:none;border-bottom:1px solid var(--violet-light)}
+  .article a:hover{border-bottom-color:var(--violet)}
+
+  /* ---------- figures: in the flow, no cage ---------- */
+  .panel{margin:34px 0;padding:0}
+  .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  svg{display:block;min-width:340px;max-width:100%;height:auto;margin:4px auto}
+  .cap{font-size:.88rem;line-height:1.55;color:var(--text-light);margin-top:12px;
+       text-align:center;font-style:italic;max-width:600px;margin-left:auto;margin-right:auto}
+  .stepnum{font-family:var(--mono);font-size:12px;fill:var(--muted);text-anchor:middle}
+  .lanelbl{font-family:var(--mono);font-size:12px;fill:var(--ink);text-anchor:start;font-weight:600}
+  .cell-lbl{font-family:var(--mono);font-size:13px;fill:#fff;text-anchor:middle;font-weight:600}
+  .cell-lbl.idle{fill:var(--idle-ink);font-weight:500;font-size:11px}
+  .divider{stroke:var(--accent2);stroke-width:2;stroke-dasharray:5 4}
+  .dlabel{font-family:var(--mono);font-size:11px;fill:var(--accent2);text-anchor:middle}
+  .legend{display:flex;flex-wrap:wrap;gap:12px 22px;font-size:.84rem;
+          font-family:var(--mono);color:var(--text-light);margin:16px 0 2px;justify-content:center}
+  .legend span{display:inline-flex;align-items:center;gap:7px}
+  .sw{width:16px;height:16px;border-radius:4px;display:inline-block}
+  .sw.req{background:linear-gradient(135deg,var(--r1),var(--r4))}
+  .sw.idle{background:var(--idle);border:1px solid #c3c0b8}
+  .sw.none{background:transparent;border:1.5px dashed var(--none)}
+
+  /* ---------- scoreboard table ---------- */
+  .article table{border-collapse:collapse;width:100%;margin:28px 0;font-size:.95rem}
+  .article th,.article td{padding:12px 14px;text-align:right;border-bottom:1px solid var(--line)}
+  .article th:first-child,.article td:first-child{text-align:left}
+  .article thead th{color:var(--text-light);font-weight:600;font-family:var(--mono);
+                    font-size:.8rem;letter-spacing:.02em;border-bottom:2px solid var(--violet-light)}
+  .article tbody td{font-family:var(--mono)}
+  tr.win td{background:var(--violet-bg)}
+  .delta{color:var(--violet);font-weight:700}
+
+  /* ---------- code block ---------- */
+  pre{background:#1b1b22;color:#eaeaea;border-radius:11px;padding:20px 22px;overflow-x:auto;
+      font-family:var(--mono);font-size:.84rem;line-height:1.6;margin:26px 0}
+  pre .c{color:#8c9b86}
+
+  /* ---------- callouts (soft article pull-blocks) ---------- */
+  .keypt{border-left:3px solid var(--violet);background:var(--violet-bg);
+         padding:14px 20px;margin:24px 0;border-radius:0 9px 9px 0;color:var(--title);font-size:1.02rem;line-height:1.7}
+  .keypt b{color:var(--violet)}
+  .next{border-left:3px solid var(--accent2);background:#fbf5f1;
+        padding:14px 20px;margin:24px 0;border-radius:0 9px 9px 0;font-size:1.02rem;line-height:1.7}
+  .next b{color:var(--accent2)}
+
+  /* ---------- site footer band (violet, matches the site) ---------- */
+  .site-footer{background:var(--violet);color:#fff;margin-top:72px;padding:48px 24px 26px}
+  .site-footer_inner{max-width:1080px;margin:0 auto;display:flex;flex-wrap:wrap;
+                     justify-content:space-between;align-items:flex-start;gap:28px}
+  .site-footer h3{margin:0 0 4px;font-size:1.5rem;font-weight:600}
+  .site-footer .role{font-size:.95rem;opacity:.85}
+  .foot-links{display:flex;gap:24px;list-style:none;padding:0;margin:6px 0 0}
+  .foot-links a{color:#fff;opacity:.9;text-decoration:none;font-size:.95rem}
+  .foot-links a:hover{opacity:1}
+  .socials{display:flex;gap:16px;margin-top:4px}
+  .socials a{color:#fff;opacity:.9;display:inline-flex;transition:opacity .15s}
+  .socials a:hover{opacity:1}
+  .socials svg{width:22px;height:22px;fill:currentColor}
+  .copy{max-width:1080px;margin:32px auto 0;text-align:center;font-size:.82rem;opacity:.8;
+        border-top:1px solid rgba(255,255,255,.22);padding-top:18px}
+
+  @media(max-width:760px){
+    .post-title{font-size:1.95rem}
+    .article{padding:34px 18px 0}
+    .article p{font-size:1.02rem}
+    .site-footer_inner{flex-direction:column;gap:18px}
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav_inner">
+    <a href="../index.html" class="nav_logo">Balaji<span>.</span></a>
+    <div class="nav_links">
+      <a href="../index.html#home">Home</a>
+      <a href="../index.html#projects">Projects</a>
+      <a href="continuous-batching-from-scratch.html" class="here">Blog</a>
+      <a href="../index.html#contact">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<article class="article">
+  <div class="eyebrow">nanogpt-served · llm inference</div>
+  <h1 class="post-title">Continuous batching from scratch</h1>
+  <p class="post-sub">How iteration-level scheduling makes LLM serving fast — built by hand,
+  then measured: <b>static 10 steps / 65% utilization → continuous 6 steps / 100%</b>,
+  same requests served.</p>
+  <div class="post-meta">Balaji Chidambaram · June 2026 · ~6 min read</div>
+
+<p>I've worked with LLM APIs a lot over the years, but I've always been fascinated
+by how everything works under the hood. Since undergrad I've been drawn to GPUs and
+distributed systems — one of my projects was large-scale processing with Hadoop and
+MapReduce — but I never had the resources to go deep, since access to serious GPUs
+was expensive back in 2020 (it's even more expensive now 🤣).</p>
+
+<p>Working with LLM APIs day-to-day now — Vertex AI, OpenAI, Claude — that old
+curiosity came back: how do these services serve live, millisecond inference for
+massive models at scale? I want to pivot my career toward inference and platform
+engineering, and this blog — starting with <code class="inl">nanogpt-served</code> —
+is me learning it by building it from scratch.</p>
+
+<p>When a server runs one model for many users, the requests arrive and finish at
+<em>different</em> times. The hard question isn't <em>which output belongs to which
+request</em> (that's solved by batch <b>row</b>) — it's <b>when do you decide the
+batch?</b> That single timing choice is the gap between a slow server and a fast one.</p>
+
+<h2><span class="n">01</span>Static batching — the slow default</h2>
+<p>Grab a batch, run it in <b>lockstep</b>, everyone leaves when the <b>slowest</b>
+finishes. Five requests needing <code class="inl">[2, 6, 3, 4, 2]</code> tokens,
+3 GPU lanes:</p>
+<div class="panel">
+  <div class="scroll"><svg id="static" role="img" aria-label="Static batching timeline"></svg></div>
+  <div class="legend">
+    <span><i class="sw req"></i>request decoded (useful)</span>
+    <span><i class="sw idle"></i>idle lane — finished request, dead weight</span>
+    <span><i class="sw none"></i>no lane (batch smaller than max)</span>
+  </div>
+  <div class="cap">Two wastes: <b>idle lanes</b> (R1 done at step 2 but still
+  decoded through step 6) and the <b>wave barrier</b> — R4/R5 can't start until
+  <em>all</em> of wave 1 drains, even though lanes sat free from step 3.</div>
+</div>
+
+<h2><span class="n">02</span>Continuous batching — re-decide every step</h2>
+<p>vLLM's term is <b>iteration-level scheduling</b>: the scheduler runs between
+<em>every</em> decode step. A finished request leaves immediately; a queued one
+takes the freed lane next step.</p>
+<div class="panel">
+  <div class="scroll"><svg id="cont" role="img" aria-label="Continuous batching timeline"></svg></div>
+  <div class="legend">
+    <span><i class="sw req"></i>request decoded (useful)</span>
+    <span><i class="sw none"></i>no lane (batch shrank — <b>not</b> wasted)</span>
+  </div>
+  <div class="cap">Watch <b>lane A</b>: R1 (blue) finishes at step 2, R4 (purple)
+  takes its lane at step 3 — no barrier, no wait. The only gap (lane C, step 6)
+  is the unavoidable <b>drain tail</b>: the batch shrinks to 2, it does
+  <em>not</em> decode dead weight. That's why util reads 100%, not 94%.</div>
+</div>
+
+<h2><span class="n">03</span>The scoreboard</h2>
+<p>A <b>slot-step</b> = one GPU lane used for one decode step — the atomic unit of
+work. <code class="inl">total</code> = lanes you paid for; <code class="inl">useful</code>
+= lanes that produced a token a request still wanted. Same model, same prompts,
+same 5 requests served:</p>
+<table>
+  <thead><tr><th>mode</th><th>steps</th><th>useful / total<br>slot-steps</th><th>utilization</th><th>served</th></tr></thead>
+  <tbody>
+    <tr><td>static</td><td>10</td><td>17 / 26</td><td>65%</td><td>5</td></tr>
+    <tr class="win"><td>continuous</td><td><span class="delta">6</span></td><td>17 / 17</td><td><span class="delta">100%</span></td><td>5</td></tr>
+  </tbody>
+</table>
+<div class="keypt">
+  <b>Identical work, identical output.</b> Continuous batching didn't skip
+  anything — <code class="inl">served</code> and <code class="inl">useful</code>
+  are unchanged. It just stopped wasting lanes: <b>26→17</b> slot-steps (no idle
+  lanes) and <b>10→6</b> steps (no head-of-line wait). On a real GPU those two
+  numbers are throughput&nbsp;↑ and time-to-first-token&nbsp;↓.
+</div>
+<div class="keypt">
+  <b>Why useful == total in continuous?</b> You <code class="inl">evict</code> at
+  the end of every step, so at decode time every lane holds a request that still
+  wants a token. No lane is ever spent on a finished request. Static can't evict
+  mid-wave (it's lockstep), so the gap is pure waste.
+</div>
+
+<h2><span class="n">04</span>Policy vs mechanism — the vLLM shape</h2>
+<p>The build accidentally drew the real architecture boundary. The
+<b>scheduler</b> decides batch membership each iteration (policy); the
+<b>decode</b> just runs a forward pass (mechanism) and is oblivious to <em>which</em>
+requests it holds.</p>
+<div class="panel scroll"><svg id="arch" role="img" aria-label="Policy over mechanism"></svg>
+  <div class="cap">This is vLLM in miniature: a <code class="inl">Scheduler</code>
+  over a model-execution layer. The missing piece between this toy and vLLM is
+  inside the mechanism box.</div>
+</div>
+
+<h2><span class="n">05</span>The core decision: admit → decode → evict</h2>
+<p>The scaffolding (request queue, the decode pass) is plumbing. The whole idea
+lives in the <b>ordering</b> of the step loop — admit waiting requests into free
+lanes, decode the current batch once, then evict whoever finished so their lane
+opens up <em>next</em> step:</p>
+<pre><code><span class="c"># ADMIT: fill every free lane (while, not if).</span>
+while len(self.running) &lt; self.max_batch_size and self.waiting:
+    self.running.append(self.waiting.pop(0))
+
+<span class="c"># DECODE: one forward over the current batch.</span>
+self._decode(self.running)
+self.steps += 1
+self.total_slot_steps  += len(self.running)   <span class="c"># cost</span>
+self.useful_slot_steps += len(self.running)   <span class="c"># all useful → evict-at-end</span>
+
+<span class="c"># EVICT: finished requests leave, freeing their lane for next step.</span>
+done = [r for r in self.running if r.done]
+self.finished.extend(done)
+self.running = [r for r in self.running if not r.done]</code></pre>
+
+<h2><span class="n">06</span>What's next — why a KV cache doesn't just drop in</h2>
+<div class="next">
+  <b>The deliberate cheat:</b> <code class="inl">_decode</code> <b>recomputes</b>
+  the full context every step — no KV cache. A naive single-sequence KV cache
+  assumes <b>one sequence of one length</b>; a batch whose membership and lengths
+  change every step shatters that single contiguous tensor. That exact mismatch is
+  what <b>PagedAttention</b> solves — a cache manager that hands out fixed-size
+  blocks so ragged, churning sequences share GPU memory without copying. That's the
+  next build.
+</div>
+
+<p>Building this drove home something I hadn't appreciated: inference isn't only
+about the GPU — it's just as much about the framework and software layered above it,
+from tensors up to the scheduler. The batch scheduler packages requests together so
+the GPU's parallel compute actually gets used instead of sitting idle. LLM inference
+used to be a black box to me — I always wondered why inference APIs charge less per
+token for batch requests and cached prompts. Now I understand the machinery behind it.</p>
+
+<p>Full code: <a href="https://github.com/balachidam21/nanogpt-served">github.com/balachidam21/nanogpt-served</a> — feedback welcome.</p>
+</article>
+
+<footer class="site-footer">
+  <div class="site-footer_inner">
+    <div>
+      <h3>Balaji Chidambaram</h3>
+      <div class="role">Learning LLM inference, in public</div>
+    </div>
+    <ul class="foot-links">
+      <li><a href="../index.html#home">Home</a></li>
+      <li><a href="../index.html#projects">Projects</a></li>
+      <li><a href="../index.html#contact">Contact</a></li>
+    </ul>
+    <div class="socials">
+      <a href="https://www.linkedin.com/in/balaji-chidam/" target="_blank" rel="noopener" aria-label="LinkedIn">
+        <svg viewBox="0 0 24 24"><path d="M4.98 3.5A2.5 2.5 0 1 1 0 3.51a2.5 2.5 0 0 1 4.98 0zM.25 8.06h4.46V24H.25zM8.34 8.06h4.28v2.18h.06c.6-1.13 2.05-2.32 4.22-2.32 4.51 0 5.35 2.97 5.35 6.83V24h-4.46v-7.32c0-1.75-.03-4-2.44-4-2.44 0-2.81 1.9-2.81 3.87V24H8.34z"/></svg>
+      </a>
+      <a href="https://github.com/balachidam21" target="_blank" rel="noopener" aria-label="GitHub">
+        <svg viewBox="0 0 24 24"><path d="M12 .5C5.37.5 0 5.87 0 12.5c0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58v-2.02c-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.08-.73.08-.73 1.2.09 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.13-.3-.54-1.52.11-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.29-1.55 3.3-1.23 3.3-1.23.65 1.66.24 2.88.12 3.18.77.84 1.23 1.91 1.23 3.22 0 4.61-2.81 5.62-5.49 5.92.43.37.81 1.1.81 2.22v3.29c0 .32.21.7.82.58A12 12 0 0 0 24 12.5C24 5.87 18.63.5 12 .5z"/></svg>
+      </a>
+      <a href="mailto:bchidamb@usc.edu" aria-label="Email">
+        <svg viewBox="0 0 24 24"><path d="M2 4h20a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zm10 7L3.6 6h16.8L12 11zm0 2.2L3 7.4V18h18V7.4l-9 5.8z"/></svg>
+      </a>
+    </div>
+  </div>
+  <div class="copy">© 2026 Balaji Chidambaram · built to learn, in public</div>
+</footer>
+
+<script>
+const NS="http://www.w3.org/2000/svg";
+const COLORS={1:"#4e79a7",2:"#f28e2b",3:"#59a14f",4:"#9c6bb0",5:"#d0494b"};
+
+function el(name,attrs){const e=document.createElementNS(NS,name);
+  for(const k in attrs)e.setAttribute(k,attrs[k]);return e;}
+
+function renderGrid(svgId,cfg){
+  const svg=document.getElementById(svgId);
+  const W=44,H=40,GAP=5,GUT=66,TOP=30;
+  const cols=cfg.steps, rows=cfg.rows.length;
+  const width=GUT+cols*(W+GAP)+12;
+  const dividerLabelH=cfg.divider?22:6;
+  const height=TOP+rows*(H+GAP)+dividerLabelH;
+  svg.setAttribute("viewBox",`0 0 ${width} ${height}`);
+  svg.setAttribute("width",width);
+
+  for(let s=0;s<cols;s++){
+    const t=el("text",{x:GUT+s*(W+GAP)+W/2,y:TOP-11,class:"stepnum"});
+    t.textContent=s+1; svg.appendChild(t);
+  }
+  cfg.rows.forEach((row,r)=>{
+    const ly=TOP+r*(H+GAP);
+    const lbl=el("text",{x:6,y:ly+H/2+4,class:"lanelbl"});
+    lbl.textContent=row.label; svg.appendChild(lbl);
+    row.cells.forEach((c,s)=>{
+      const x=GUT+s*(W+GAP);
+      if(c===null){
+        svg.appendChild(el("rect",{x,y:ly,width:W,height:H,rx:5,
+          fill:"none",stroke:"var(--none)","stroke-width":1.5,"stroke-dasharray":"4 3"}));
+        return;
+      }
+      if(c==="idle"){
+        svg.appendChild(el("rect",{x,y:ly,width:W,height:H,rx:5,
+          fill:"var(--idle)",stroke:"#c3c0b8","stroke-width":1}));
+        const t=el("text",{x:x+W/2,y:ly+H/2+4,class:"cell-lbl idle"});
+        t.textContent="idle"; svg.appendChild(t);
+        return;
+      }
+      svg.appendChild(el("rect",{x,y:ly,width:W,height:H,rx:5,fill:COLORS[c]}));
+      const t=el("text",{x:x+W/2,y:ly+H/2+5,class:"cell-lbl"});
+      t.textContent="R"+c; svg.appendChild(t);
+    });
+  });
+  if(cfg.divider){
+    const dx=GUT+cfg.divider*(W+GAP)-GAP/2;
+    svg.appendChild(el("line",{x1:dx,y1:TOP-6,x2:dx,y2:TOP+rows*(H+GAP),class:"divider"}));
+    const t=el("text",{x:dx,y:TOP+rows*(H+GAP)+15,class:"dlabel"});
+    t.textContent="◀ wave barrier ▶"; svg.appendChild(t);
+  }
+}
+
+renderGrid("static",{
+  steps:10, divider:6,
+  rows:[
+    {label:"lane A", cells:[1,1,"idle","idle","idle","idle",4,4,4,4]},
+    {label:"lane B", cells:[2,2,2,2,2,2,5,5,"idle","idle"]},
+    {label:"lane C", cells:[3,3,3,"idle","idle","idle",null,null,null,null]},
+  ],
+});
+
+renderGrid("cont",{
+  steps:6,
+  rows:[
+    {label:"lane A", cells:[1,1,4,4,4,4]},
+    {label:"lane B", cells:[2,2,2,2,2,2]},
+    {label:"lane C", cells:[3,3,3,5,5,null]},
+  ],
+});
+
+// --- policy/mechanism sandwich ---
+(function(){
+  const svg=document.getElementById("arch");
+  const w=620,h=210; svg.setAttribute("viewBox",`0 0 ${w} ${h}`); svg.setAttribute("width",w);
+  function band(x,y,bw,bh,fill,stroke){return el("rect",{x,y,width:bw,height:bh,rx:9,fill,stroke,"stroke-width":1.5});}
+  function txt(x,y,s,cls,size,fill){const t=el("text",{x,y,"text-anchor":"middle",
+    "font-family":"var(--mono)","font-size":size||13,fill:fill||"#1c1c1e"});
+    if(cls)t.setAttribute("font-weight",600);t.textContent=s;return t;}
+  // policy band (violet)
+  svg.appendChild(band(20,18,w-40,74,"#f0edfb","#6e57e0"));
+  svg.appendChild(txt(w/2,40,"Scheduler  (policy — the part you write)",1,14,"#6e57e0"));
+  ["1. admit waiting","2. decode batch","3. evict finished"].forEach((s,i)=>{
+    const bx=40+i*((w-80)/3), bw=(w-80)/3-10;
+    svg.appendChild(el("rect",{x:bx,y:54,width:bw,height:28,rx:6,fill:"#fff",stroke:"#b9a9f0"}));
+    svg.appendChild(txt(bx+bw/2,72,s,0,11,"#33332f"));
+  });
+  // arrow
+  svg.appendChild(el("line",{x1:w/2,y1:96,x2:w/2,y2:120,stroke:"#6b6b70","stroke-width":1.6,"marker-end":"url(#ar)"}));
+  const defs=el("defs",{}); const m=el("marker",{id:"ar",markerWidth:8,markerHeight:8,refX:6,refY:3,orient:"auto"});
+  m.appendChild(el("path",{d:"M0,0 L6,3 L0,6 Z",fill:"#6b6b70"})); defs.appendChild(m); svg.appendChild(defs);
+  svg.appendChild(txt(w/2+92,113,"calls _decode(batch)",0,10.5,"#6b6b70"));
+  // mechanism band
+  svg.appendChild(band(20,124,w-40,68,"#1c1c1e","#1c1c1e"));
+  svg.appendChild(txt(w/2,148,"Model execution  (mechanism — oblivious to which requests)",1,13,"#eaeaea"));
+  svg.appendChild(txt(w/2,172,"forward pass · TOY: recompute  ·  vLLM: PagedAttention KV cache",0,11.5,"#d0494b"));
+})();
+</script>
+</body>
+</html>
