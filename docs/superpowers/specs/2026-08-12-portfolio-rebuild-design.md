@@ -2,7 +2,10 @@
 
 **Date:** 2026-08-12
 **Repo:** `balachidam21.github.io`
-**Branch:** `portfolio-rebuild-2026` (based on `blog/continuous-batching-post`, itself `main` + 1 commit)
+**Branch:** `portfolio-rebuild-2026` — branched from `blog/continuous-batching-post`.
+Verified 2026-08-12 against a fetched `origin/main` (`34bf8a5`, the merge of that same
+branch): the working tree is **content-identical** to `origin/main` apart from this spec
+and one `.gitignore` line. Only commit topology differs; no upstream work is missing.
 **Status:** Approved design, pending implementation plan
 
 ---
@@ -219,13 +222,20 @@ visually, not by build success.
 
 ## Risks
 
-1. **GitHub Pages source must change** from "deploy from branch" to "GitHub Actions" in
-   repo settings. Manual step in the GitHub UI; cannot be scripted from here. Until
-   flipped, the built site does not publish.
-2. **URL break.** The post currently resolves at `/blog/continuous-batching-from-scratch.html`;
-   Astro places it at `/writing/continuous-batching-from-scratch/`. Mitigation: keep a
-   redirect stub at the old path. Note this URL has never been live on `main`, so
-   external inbound links are unlikely — the stub is cheap insurance, not a critical path.
+1. **Deploys are currently frozen.** ✅ The user switched Pages source from "deploy from
+   branch" to "GitHub Actions" on 2026-08-12. But the repo has no `.github/workflows/`,
+   so no deployment can run. GitHub continues serving the last branch-based build — the
+   site is live (HTTP 200, verified 2026-08-12) but **cannot be updated until the Astro
+   workflow ships.** The workflow is therefore on the critical path, not a finishing
+   touch. Corollary: the first successful workflow run replaces the live site, so it must
+   not run until the build is verified locally.
+2. **URL break — required mitigation, not optional.** PR #1 merged, so
+   `/blog/continuous-batching-from-scratch.html` **is live and indexable** (HTTP 200,
+   verified 2026-08-12). Astro would place the post at
+   `/writing/continuous-batching-from-scratch/`. A redirect stub at the old path is
+   mandatory; dropping it breaks a published URL. (An earlier draft of this spec judged
+   the stub optional on the belief the post had never been live. That was wrong — it went
+   live when PR #1 merged.)
 3. **Diagram palette coupling** — see Migration above.
 4. **Accidental commit of untracked WIP** — see Constraints. Mitigated by explicit-path
    `git add` only.
@@ -244,6 +254,10 @@ Implementation is not complete until:
 - No client name appears anywhere in the built output. Verified by grep for
   `Cardinal`, `HESS`, and `Finance One` across `dist/`.
 - `git status` shows `blog/paged-attention-from-scratch.html` still untracked.
+- After the first workflow deploy: the site root returns HTTP 200, and
+  `/blog/continuous-batching-from-scratch.html` still resolves (via redirect stub) rather
+  than 404ing. Because deploys are frozen until this workflow runs, its first run
+  *replaces the live site* — verify the build locally before letting it run on `main`.
 - The three retained project links, plus the DOI and all `cv.md` credential links,
   return HTTP 200.
 - Site renders correctly at 375px, 768px, and 1440px widths.
