@@ -40,6 +40,24 @@ for (const stale of ['graduate computer science student', 'currently mastering',
 // 3. Current positioning is actually present.
 if (!allHtml.includes('Principal Consultant')) fail('current title "Principal Consultant" not found in dist/');
 
+// 3b. Glued-word guard. Astro parses inline markup as JSX and drops the newline
+// between an inline element and adjacent text, silently producing "slowestfinishes".
+// Catch any lowercase letter butting directly against a closing inline tag or an
+// opening one, which is never intentional in prose.
+// The negative lookbehind skips EMPTY inline elements: the diagram legends use
+// `<i class="sw req"></i>request decoded` as a colour swatch, which is correct markup
+// and byte-identical to the original. Only closing tags that actually wrapped text count.
+const GLUE = /(?<!>)(<\/(?:b|i|em|strong|code|a)>)([a-z])|([a-z])(<(?:b|i|em|strong|code)>)/g;
+for (const f of html) {
+  const body = readFileSync(f, 'utf8').replace(/<(script|style)[\s\S]*?<\/\1>/g, '');
+  const hits = [...body.matchAll(GLUE)]
+    // section-number chips like <span class="n">01</span>Static are intentional
+    .filter((m) => !/class="n"/.test(body.slice(Math.max(0, m.index - 60), m.index)));
+  if (hits.length) {
+    fail(`${f}: ${hits.length} glued word(s) at tag boundary, e.g. "${body.slice(Math.max(0, hits[0].index - 12), hits[0].index + 24).replace(/\s+/g, ' ')}"`);
+  }
+}
+
 // 4. Required routes exist.
 const required = [
   'dist/index.html',
@@ -50,6 +68,12 @@ const required = [
   'dist/404.html',
   'dist/blog/continuous-batching-from-scratch.html',
   'dist/blog/paged-attention-from-scratch.html',
+  // The résumé is the highest-value link for a recruiter; a missing file 404s silently.
+  'dist/Resume_Balaji_Chidambaram.pdf',
+  'dist/robots.txt',
+  // The continuous-batching diagrams are injected by this script at runtime. Without
+  // it the three <svg> shells still count as 3 and every other check stays green.
+  'dist/js/continuous-batching-diagrams.js',
 ];
 for (const p of required) if (!existsSync(p)) fail(`missing route: ${p}`);
 
@@ -61,6 +85,23 @@ const stubs = {
 for (const [f, target] of Object.entries(stubs)) {
   if (existsSync(f) && !readFileSync(f, 'utf8').includes(target)) {
     fail(`${f} does not redirect to ${target}`);
+  }
+}
+
+// 5b. The diagram script must actually be referenced by the post that needs it.
+const cbPost = 'dist/writing/continuous-batching-from-scratch/index.html';
+if (existsSync(cbPost) && !readFileSync(cbPost, 'utf8').includes('/js/continuous-batching-diagrams.js')) {
+  fail(`${cbPost}: diagram script is not referenced — all three diagrams will render blank`);
+}
+
+// 5c. The layout must keep its namespaced chrome classes. If it reverts to
+// .site-footer, the post CSS (which still defines that class as a violet block)
+// would restyle the footer on post pages only.
+for (const f of ['dist/index.html', cbPost]) {
+  if (!existsSync(f)) continue;
+  const src = readFileSync(f, 'utf8');
+  if (!src.includes('pf-footer') || !src.includes('pf-nav')) {
+    fail(`${f}: layout chrome is not using .pf-nav/.pf-footer — post CSS will collide`);
   }
 }
 
@@ -95,7 +136,13 @@ for (const f of postCss) {
 
 // 7. Diagram custom properties must resolve somewhere in the CSS.
 const allCss = css.map((f) => readFileSync(f, 'utf8')).join('\n');
-for (const prop of ['--violet', '--ink', '--muted', '--r1', '--waste']) {
+for (const prop of [
+  '--violet', '--violet-alt', '--violet-light', '--violet-bg', '--title', '--text',
+  '--text-light', '--body', '--container', '--line', '--accent2', '--ink', '--muted',
+  '--idle', '--idle-ink', '--none', '--r1', '--r2', '--r3', '--r4', '--r5',
+  '--waste', '--waste-ink', '--panel-warm', '--panel-cool', '--panel-sand',
+  '--rung-cool-ink', '--rung-sand-ink',
+]) {
   if (!allCss.includes(`${prop}:`)) fail(`custom property ${prop} is never defined in dist CSS`);
 }
 
@@ -108,6 +155,29 @@ for (const [f, n] of Object.entries(svgExpect)) {
   if (!existsSync(f)) continue;
   const found = (readFileSync(f, 'utf8').match(/<svg/g) || []).length;
   if (found !== n) fail(`${f}: expected ${n} <svg>, found ${found}`);
+}
+
+// 8b. Every custom property referenced anywhere must be defined, in BOTH themes if
+// it is defined in dark at all. A var() with no definition renders as nothing.
+const referenced = new Set([...allCss.matchAll(/var\((--[a-z0-9-]+)\)/g)].map((m) => m[1]));
+for (const prop of referenced) {
+  if (!allCss.includes(`${prop}:`)) fail(`custom property ${prop} is used but never defined`);
+}
+
+// 8c. SEO essentials.
+for (const f of html) {
+  const src = readFileSync(f, 'utf8');
+  const is404 = f.endsWith('404.html');
+  // /resume is print-only and noindex: it exists to source the PDF, not to be found.
+  const isStub = f.includes('/blog/') || f.includes('/resume/');
+  if (isStub) continue;
+  if (!src.includes('og:image')) fail(`${f}: missing og:image`);
+  if (is404) {
+    if (src.includes('rel="canonical"')) fail(`${f}: 404 must not declare a canonical`);
+    if (!src.includes('name="robots"')) fail(`${f}: 404 must be noindex`);
+  } else if (!src.includes('rel="canonical"')) {
+    fail(`${f}: missing canonical`);
+  }
 }
 
 // 9. Legacy template cruft must be gone.

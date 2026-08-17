@@ -74,7 +74,7 @@
                     font-size:.8rem;letter-spacing:.02em;border-bottom:2px solid var(--violet-light)}
   .article tbody td{font-family:var(--mono)}
   tr.win td{background:var(--violet-bg)}
-  tr.lose td{background:#fbf3ef}
+  tr.lose td{background:var(--panel-warm)}
   .delta{color:var(--violet);font-weight:700}
   .bad{color:var(--accent2);font-weight:700}
   table.small{font-size:.88rem}
@@ -90,7 +90,7 @@
   .keypt{border-left:3px solid var(--violet);background:var(--violet-bg);
          padding:14px 20px;margin:24px 0;border-radius:0 9px 9px 0;color:var(--title);font-size:1.02rem;line-height:1.7}
   .keypt b{color:var(--violet)}
-  .next{border-left:3px solid var(--accent2);background:#fbf5f1;
+  .next{border-left:3px solid var(--accent2);background:var(--panel-warm);
         padding:14px 20px;margin:24px 0;border-radius:0 9px 9px 0;font-size:1.02rem;line-height:1.7}
   .next b{color:var(--accent2)}
 

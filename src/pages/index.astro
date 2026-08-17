@@ -4,8 +4,10 @@ import { profile } from '../data/profile';
 import { writingIndex } from '../data/writing';
 
 const latest = writingIndex.slice(0, 3);
+// timeZone: 'UTC' is required -- new Date('2026-01-01') is UTC midnight, which
+// renders as 'Dec 2025' in any negative-offset locale.
 const fmt = (iso: string) =>
-  new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+  new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'short', timeZone: 'UTC' });
 ---
 
 <BaseLayout title="Balaji Chidambaram — AI Engineer" description={profile.lede}>
@@ -58,12 +60,12 @@ const fmt = (iso: string) =>
     {profile.experience.slice(0, 3).map((x) => (
       <article class="job">
         <div class="job-head">
-          <b>{x.role}</b>
-          <span class="co">{x.company}</span>
+          <h3>{x.role}</h3>
           <i class="period">{x.period}</i>
         </div>
+        <p class="job-meta"><span class="co">{x.company}</span></p>
         <ul class="bullets">
-          {x.bullets.map((b) => <li>{b}</li>)}
+          {x.summary.map((b) => <li>{b}</li>)}
         </ul>
       </article>
     ))}
@@ -85,7 +87,7 @@ const fmt = (iso: string) =>
   <section class="container block">
     <h2>Get in touch</h2>
     <p class="contact">
-      Based in {profile.location}. Reach me at
+      Based in {profile.location}. Reach me at{' '}
       <a href={`mailto:${profile.email}`}>{profile.email}</a>.
     </p>
   </section>
@@ -205,12 +207,20 @@ const fmt = (iso: string) =>
     align-items: baseline;
     margin-bottom: 0.5rem;
   }
-  .job-head b {
+  .job-head h3 {
     color: var(--title);
     font-weight: 600;
+    font-size: 1rem;
+    margin: 0;
   }
-  .job-head .co {
-    color: var(--violet);
+  /* Company names are NOT links — never give them the link color. */
+  .job-meta {
+    margin: 0.1rem 0 0.55rem;
+    font-size: 0.88rem;
+  }
+  .job-meta .co {
+    color: var(--text);
+    font-weight: 500;
   }
   .job-head .period {
     color: var(--text-light);

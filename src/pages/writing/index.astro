@@ -2,8 +2,10 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { writingIndex } from '../../data/writing';
 
+// timeZone: 'UTC' is required -- new Date('2026-01-01') is UTC midnight, which
+// renders as 'Dec 2025' in any negative-offset locale.
 const fmt = (iso: string) =>
-  new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+  new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'short', timeZone: 'UTC' });
 ---
 
 <BaseLayout
@@ -44,7 +46,7 @@ const fmt = (iso: string) =>
 
 <style>
   .wrap {
-    width: min(100% - 2.5rem, 46rem);
+    width: min(100% - 2.5rem, var(--wrap));
     margin-inline: auto;
     padding-block: 1.5rem 3rem;
   }

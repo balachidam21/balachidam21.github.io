@@ -3,12 +3,12 @@
    Do not rename. See docs/superpowers/specs/2026-08-12-portfolio-rebuild-design.md */
 :root {
   --violet: #6e57e0;
-  --violet-alt: #7d6bd6;
+  --violet-alt: #5b46b8;
   --violet-light: #c2b6fc;
   --violet-bg: #f0edfb;
   --title: hsl(250, 8%, 15%);
   --text: hsl(250, 9%, 32%);
-  --text-light: hsl(250, 8%, 55%);
+  --text-light: hsl(250, 9%, 40%);
   --body: #fcfcff;
   --container: #ffffff;
   --line: #e7e4f2;
@@ -35,6 +35,13 @@
   /* paged-attention: wasted KV blocks */
   --waste: #d9d5cd;
   --waste-ink: #8d8a83;
+
+  /* panel backgrounds used by the migrated posts */
+  --panel-warm: #fbf5f1;
+  --panel-cool: #eef7f0;
+  --panel-sand: #fdf6e6;
+  --rung-cool-ink: #3d7a52;
+  --rung-sand-ink: #9a7208;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -56,6 +63,14 @@
     /* series colors stay put — they encode data, not chrome */
     --waste: #34313d;
     --waste-ink: #8b8794;
+    --violet-alt: #b3a4f2;
+    --accent2: #e0855f;
+    /* legacy post panels were authored light-only; give them dark equivalents */
+    --panel-warm: #241f1c;
+    --panel-cool: #1b241d;
+    --panel-sand: #241f18;
+    --rung-cool-ink: #7fc496;
+    --rung-sand-ink: #d9b354;
   }
 }
 
@@ -78,7 +93,12 @@ a { color: var(--violet); }
 
 img { max-width: 100%; height: auto; }
 
-.container { width: min(100% - 2.5rem, 60rem); margin-inline: auto; }
+/* ONE content width for the whole site. The nav, footer and every page body use
+   this, so the left edge never shifts between routes. 45rem = 720px, which is what
+   the migrated posts' .article already uses, so posts align too. */
+:root { --wrap: 45rem; }
+
+.container { width: min(100% - 2.5rem, var(--wrap)); margin-inline: auto; }
 
 /* Legacy post tables were authored without a scroll wrapper and push the page
    past the viewport at 375px (measured: 472px scrollWidth at a 375px viewport).
@@ -93,3 +113,14 @@ img { max-width: 100%; height: auto; }
 }
 
 :focus-visible { outline: 2px solid var(--violet); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto !important; }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

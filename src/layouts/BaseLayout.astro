@@ -8,16 +8,31 @@ interface Props {
   title: string;
   description: string;
   ogType?: string;
+  ogImage?: string;
+  noindex?: boolean;
 }
 
-const { title, description, ogType = 'website' } = Astro.props;
-const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const {
+  title,
+  description,
+  ogType = 'website',
+  ogImage = '/assets/img/animoji.png',
+  noindex = false,
+} = Astro.props;
+
+// 404 has no real URL, so it gets no canonical -- pointing one at /404/ would
+// advertise a route that does not exist and make a soft-404 indexable.
+const canonical = noindex ? null : new URL(Astro.url.pathname, Astro.site).href;
+const ogImageUrl = new URL(ogImage, Astro.site).href;
 
 const nav = [
   { href: '/', label: 'Home' },
   { href: '/writing/', label: 'Writing' },
   { href: '/about/', label: 'About' },
 ];
+const here = Astro.url.pathname;
+const isCurrent = (href: string) =>
+  href === '/' ? here === '/' : here.startsWith(href);
 ---
 
 <!doctype html>
@@ -27,12 +42,16 @@ const nav = [
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <link rel="canonical" href={canonical} />
+    {canonical && <link rel="canonical" href={canonical} />}
+    {noindex && <meta name="robots" content="noindex" />}
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content={ogType} />
-    <meta property="og:url" content={canonical} />
-    <meta name="twitter:card" content="summary" />
+    {canonical && <meta property="og:url" content={canonical} />}
+    <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:image:alt" content="Balaji Chidambaram" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content={ogImageUrl} />
     <link rel="icon" href="/assets/img/icon.jpg" />
     <link rel="sitemap" href="/sitemap-index.xml" />
   </head>
@@ -43,7 +62,9 @@ const nav = [
         <a class="brand" href="/">Balaji</a>
         <ul>
           {nav.map((i) => (
-            <li><a href={i.href}>{i.label}</a></li>
+            <li>
+              <a href={i.href} aria-current={isCurrent(i.href) ? 'page' : undefined}>{i.label}</a>
+            </li>
           ))}
         </ul>
       </nav>
@@ -100,6 +121,10 @@ const nav = [
   }
   .pf-nav a:hover {
     color: var(--violet);
+  }
+  .pf-nav a[aria-current='page'] {
+    color: var(--violet);
+    font-weight: 600;
   }
   .pf-footer {
     border-top: 1px solid var(--line);

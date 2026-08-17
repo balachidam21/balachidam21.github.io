@@ -2,11 +2,11 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 
-<BaseLayout title="Not found — Balaji Chidambaram" description="Page not found.">
+<BaseLayout title="Not found — Balaji Chidambaram" description="Page not found." noindex={true}>
   <div class="wrap container">
     <h1>404</h1>
     <p>
-      That page doesn't exist. Try <a href="/">the homepage</a> or
+      That page doesn’t exist. Try <a href="/">the homepage</a> or{' '}
       <a href="/writing/">the writing index</a>.
     </p>
   </div>
@@ -14,8 +14,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 
 <style>
   .wrap {
-    padding-block: 4rem 6rem;
-    max-width: 40rem;
+    padding-block: 4rem;
+    min-height: 55vh;
   }
   h1 {
     color: var(--title);

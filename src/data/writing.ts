@@ -1,6 +1,11 @@
 // Single source of truth for the writing stream: the two legacy .astro post routes
-// plus external research. Future markdown posts go through the content collection in
-// src/content.config.ts and get merged here.
+// plus external research. The /writing index, the homepage teasers and /rss.xml all
+// read from this array.
+//
+// NOTE: src/content.config.ts declares a `writing` collection for future markdown
+// posts, but NOTHING MERGES IT YET. Dropping a .md file into src/content/writing/
+// will not make it appear on the site until this array is joined with
+// getCollection('writing'). Add both when the first markdown post is written.
 
 export interface WritingEntry {
   slug: string;
