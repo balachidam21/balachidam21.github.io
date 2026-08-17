@@ -1,0 +1,146 @@
+---
+// Print-optimized résumé driven by the same profile.ts as the rest of the site,
+// so the PDF can never drift from the web pages. The PDF is produced by running
+// career-ops' generate-pdf.mjs against this page's built HTML:
+//   npm run build
+//   node ~/Documents/career-ops/generate-pdf.mjs dist/resume/index.html public/Resume_Balaji_Chidambaram.pdf --format=letter
+//   npm run build   # so the PDF lands in dist/
+import { profile } from '../data/profile';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{profile.name} — Résumé</title>
+    <meta name="robots" content="noindex" />
+  </head>
+  <body>
+    <header class="head">
+      <h1>{profile.name}</h1>
+      <p class="contact">
+        {profile.location} · <a href={`mailto:${profile.email}`}>{profile.email}</a><br />
+        <a href={profile.links.linkedin}>linkedin.com/in/balaji-chidam</a> ·
+        <a href="https://balachidam21.github.io">balachidam21.github.io</a> ·
+        <a href={profile.links.github}>github.com/balachidam21</a>
+      </p>
+      <p class="summary">{profile.lede}</p>
+    </header>
+
+    <section>
+      <h2>Experience</h2>
+      {profile.experience.map((x) => (
+        <div class="entry">
+          <div class="entry-head">
+            <b>{x.company} — {x.role}</b>
+            <span>{x.period}</span>
+          </div>
+          <div class="loc">{x.location}</div>
+          <ul>{x.bullets.map((b) => <li>{b}</li>)}</ul>
+        </div>
+      ))}
+    </section>
+
+    <section>
+      <h2>Education</h2>
+      {profile.education.map((e) => (
+        <div class="entry">
+          <div class="entry-head">
+            <b>{e.degree} — {e.school}</b>
+            <span>{e.period}</span>
+          </div>
+          <div class="loc">{e.detail}</div>
+        </div>
+      ))}
+    </section>
+
+    <section>
+      <h2>Publication</h2>
+      <p class="pub">
+        {profile.publication.authors}. “{profile.publication.title}”
+        <i>{profile.publication.venue}</i>. <a href={profile.publication.doi}>{profile.publication.doi}</a>
+      </p>
+    </section>
+
+    <section>
+      <h2>Projects</h2>
+      <ul class="tight">
+        {profile.projects.map((p) => (
+          <li><b>{p.name}</b> — {p.blurb}</li>
+        ))}
+      </ul>
+    </section>
+
+    <section>
+      <h2>Skills</h2>
+      <ul class="tight">
+        {profile.skills.map((s) => (
+          <li><b>{s.label}:</b> {s.value}</li>
+        ))}
+        <li>
+          <b>Certifications:</b>{' '}
+          {profile.certifications.map((c, i) => (
+            <>{i > 0 && ', '}<a href={c.href}>{c.name}</a></>
+          ))}
+        </li>
+      </ul>
+    </section>
+  </body>
+</html>
+
+<style is:global>
+  @page {
+    margin: 14mm 14mm;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size: 9.6pt;
+    line-height: 1.42;
+    color: #1c1c1e;
+    background: #fff;
+    max-width: 7.2in;
+    margin-inline: auto;
+    padding: 10mm 0;
+  }
+  a { color: #4a3fb0; text-decoration: none; }
+  .head { margin-bottom: 10pt; }
+  h1 {
+    font-size: 19pt;
+    margin: 0 0 3pt;
+    letter-spacing: -0.02em;
+    color: #12111a;
+  }
+  .contact { margin: 0 0 6pt; font-size: 8.8pt; color: #3d3b47; line-height: 1.5; }
+  .summary { margin: 0; font-size: 9.3pt; color: #2b2933; }
+  section { margin-top: 9pt; }
+  h2 {
+    font-size: 9.6pt;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: #4a3fb0;
+    border-bottom: 0.6pt solid #cfc9ea;
+    padding-bottom: 2pt;
+    margin: 0 0 6pt;
+  }
+  .entry { margin-bottom: 7pt; break-inside: avoid; }
+  .entry-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 10pt;
+    align-items: baseline;
+  }
+  .entry-head b { font-weight: 600; }
+  .entry-head span { color: #55525e; font-size: 8.6pt; white-space: nowrap; }
+  .loc { color: #6b6874; font-size: 8.4pt; margin-bottom: 2pt; }
+  ul { margin: 2pt 0 0; padding-left: 13pt; }
+  li { margin-bottom: 2pt; }
+  ul.tight li { margin-bottom: 3pt; }
+  .pub { margin: 0; }
+  @media print {
+    body { padding: 0; }
+    a { color: #1c1c1e; }
+  }
+</style>
