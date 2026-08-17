@@ -80,4 +80,16 @@ img { max-width: 100%; height: auto; }
 
 .container { width: min(100% - 2.5rem, 60rem); margin-inline: auto; }
 
+/* Legacy post tables were authored without a scroll wrapper and push the page
+   past the viewport at 375px (measured: 472px scrollWidth at a 375px viewport).
+   Making the table its own scroll container fixes it without touching the post
+   markup, which is preserved verbatim. The diagrams already handle this via
+   their own .scroll wrapper. */
+.article table {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
 :focus-visible { outline: 2px solid var(--violet); outline-offset: 2px; }

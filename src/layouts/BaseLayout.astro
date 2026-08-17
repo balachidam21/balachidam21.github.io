@@ -38,7 +38,7 @@ const nav = [
   </head>
   <body>
     <a class="skip" href="#main">Skip to content</a>
-    <header class="site-nav">
+    <header class="pf-nav">
       <nav class="container" aria-label="Primary">
         <a class="brand" href="/">Balaji</a>
         <ul>
@@ -51,7 +51,7 @@ const nav = [
 
     <main id="main"><slot /></main>
 
-    <footer class="site-footer">
+    <footer class="pf-footer">
       <div class="container">
         <p>© 2026 Balaji Chidambaram</p>
       </div>
@@ -72,43 +72,43 @@ const nav = [
     padding: 0.5rem 0.9rem;
     border-radius: 6px;
   }
-  .site-nav nav {
+  .pf-nav nav {
     display: flex;
     align-items: center;
     gap: 1.5rem;
     padding: 1.1rem 0;
     flex-wrap: wrap;
   }
-  .site-nav .brand {
+  .pf-nav .brand {
     font-weight: 650;
     color: var(--violet);
     text-decoration: none;
     margin-right: auto;
     font-size: 1.05rem;
   }
-  .site-nav ul {
+  .pf-nav ul {
     display: flex;
     gap: 1.25rem;
     list-style: none;
     margin: 0;
     padding: 0;
   }
-  .site-nav a {
+  .pf-nav a {
     color: var(--text);
     text-decoration: none;
     font-size: 0.95rem;
   }
-  .site-nav a:hover {
+  .pf-nav a:hover {
     color: var(--violet);
   }
-  .site-footer {
+  .pf-footer {
     border-top: 1px solid var(--line);
     margin-top: 4rem;
     padding: 1.5rem 0;
     color: var(--text-light);
     font-size: 0.9rem;
   }
-  .site-footer p {
+  .pf-footer p {
     margin: 0;
   }
 </style>
