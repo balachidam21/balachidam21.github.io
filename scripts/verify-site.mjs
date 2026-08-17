@@ -38,8 +38,13 @@ const allCss = cssFiles.map((f) => readFileSync(f, 'utf8')).join('\n') + '\n' + 
 const allHtml = html.map((f) => readFileSync(f, 'utf8')).join('\n');
 
 // 1. No client engagement names anywhere in the built output.
+// Case-insensitive, and across every text-ish artifact -- not just .html. A leak in
+// rss.xml or a bundled .js is just as public, and "Hess" would have slipped an
+// exact-case check.
+const textFiles = files.filter((f) => /\.(html|xml|js|css|txt|json)$/i.test(f));
+const allText = textFiles.map((f) => readFileSync(f, 'utf8')).join('\n').toLowerCase();
 for (const name of ['Cardinal', 'HESS', 'Finance One', 'Fin.AI', 'Contract CoPilot']) {
-  if (allHtml.includes(name)) fail(`client name "${name}" appears in dist/`);
+  if (allText.includes(name.toLowerCase())) fail(`client name "${name}" appears in dist/`);
 }
 
 // 1b. No client CHARACTERISATION either. Withholding the name while describing the
@@ -98,6 +103,8 @@ const required = [
   // The continuous-batching diagrams are injected by this script at runtime. Without
   // it the three <svg> shells still count as 3 and every other check stays green.
   'dist/js/continuous-batching-diagrams.js',
+  'dist/rss.xml',
+  'dist/sitemap-index.xml',
 ];
 for (const p of required) if (!existsSync(p)) fail(`missing route: ${p}`);
 
@@ -194,6 +201,18 @@ for (const [f, n] of Object.entries(svgExpect)) {
 const referenced = new Set([...allCss.matchAll(/var\((--[a-z0-9-]+)\)/g)].map((m) => m[1]));
 for (const prop of referenced) {
   if (!allCss.includes(`${prop}:`)) fail(`custom property ${prop} is used but never defined`);
+}
+
+// 8c-pre. The feed must actually contain the writing, and be discoverable.
+if (existsSync('dist/rss.xml')) {
+  const feed = readFileSync('dist/rss.xml', 'utf8');
+  const items = (feed.match(/<item>/g) || []).length;
+  if (items < 1) fail('dist/rss.xml has no <item> entries');
+  if (!feed.includes('balachidam21.github.io')) fail('dist/rss.xml links are not absolute');
+}
+for (const f of html) {
+  if (f.includes('/blog/') || f.includes('/resume/')) continue;
+  if (!readFileSync(f, 'utf8').includes('application/rss+xml')) fail(`${f}: no RSS autodiscovery link`);
 }
 
 // 8c. SEO essentials.

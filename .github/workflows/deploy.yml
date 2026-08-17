@@ -29,6 +29,10 @@ jobs:
 
       - run: npm ci
 
+      # Types were documentation-only until this step existed: astro build strips
+      # types without checking them, so every interface was enforced by nothing.
+      - run: npm run check
+
       - run: npm run build
 
       # Gate the deploy on the site checks, not just a green build: the

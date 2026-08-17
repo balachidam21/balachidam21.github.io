@@ -31,13 +31,17 @@
   }
 
   /* ---------- wide: fixed rail in the left margin ---------- */
-  @media (min-width: 1100px) {
+  @media (min-width: 1240px) {
     .toc {
       position: fixed;
       top: 50%;
       transform: translateY(-50%);
       /* centre column is var(--wrap); sit in the margin to its left */
-      left: max(1.25rem, calc((100vw - var(--wrap)) / 2 - 15rem));
+      /* No max() floor: with --wrap 720px, a 13rem rail offset 15rem clears the column
+       only above ~1240px. Clamping to 1.25rem below that pinned the rail's right edge
+       at 228px while the column's left edge kept moving left — measured 38px of
+       overlap at 1100px, and unstyled links hid it. Breakpoint now matches geometry. */
+    left: calc((100vw - var(--wrap)) / 2 - 15rem);
       width: 13rem;
       max-height: 70vh;
       overflow-y: auto;
@@ -61,7 +65,7 @@
   }
 
   /* ---------- narrow: sticky strip under the header ---------- */
-  @media (max-width: 1099px) {
+  @media (max-width: 1239px) {
     .toc {
       position: sticky;
       top: 0;
@@ -116,7 +120,7 @@
     font-size: 0.8rem;
     box-shadow: 0 2px 10px rgb(0 0 0 / 8%);
   }
-  @media (min-width: 1100px) {
+  @media (min-width: 1240px) {
     .to-top {
       right: 2rem;
       bottom: 2rem;

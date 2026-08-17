@@ -325,6 +325,7 @@ Implementation is not complete until:
 | Client work | Résumé-level only | Impression risk of anonymized case studies outweighs their value |
 | Structure | Unified `/writing` stream | Degrades gracefully; reinforces demonstrated reasoning |
 | Design | Evolved violet + metrics strip | Builds on established identity; metrics carry the skim |
+| ~~Metrics strip~~ | **Removed 2026-08-16** | User's call: it read as out of place on the page. The four figures still appear in context inside the experience bullets. This reverses the row above and the Site Structure / Content Inventory entries, which are left as written to preserve the original reasoning. |
 | Projects | Cut 3 of 6 | Junior-signal entries drag the average at Principal level |
 | Launch | Ship now, grow later | Current site actively misrepresents; waiting costs more than sparseness |
 | PagedAttention post | ~~Untouched~~ → launch content | User instruction 2026-08-12 superseded when they merged it to `main` themselves via PR #2, 2026-08-16 |

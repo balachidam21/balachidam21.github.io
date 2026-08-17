@@ -19,6 +19,12 @@
 //     dist/resume/index.html ~/Documents/career-ops/output/Resume_Balaji_Chidambaram.pdf --format=letter
 //   cp ~/Documents/career-ops/output/Resume_Balaji_Chidambaram.pdf public/
 //   npm run build
+// This page is a standalone document that bypasses BaseLayout, so it must import the
+// font itself. Without this the PDF renders in Poppins only if Poppins happens to be
+// installed on the generating machine, and silently falls back otherwise.
+import '@fontsource/poppins/400.css';
+import '@fontsource/poppins/500.css';
+import '@fontsource/poppins/600.css';
 import { profile } from '../data/profile';
 
 const onePage = profile.experience.filter((x) => x.resume);
@@ -36,7 +42,7 @@ const onePage = profile.experience.filter((x) => x.resume);
     <header class="head">
       <h1>{profile.name}</h1>
       <p class="contact">
-        (669) 263-5630 &nbsp;|&nbsp; {profile.location} &nbsp;|&nbsp;
+        {profile.phone} &nbsp;|&nbsp; {profile.location} &nbsp;|&nbsp;
         <a href={`mailto:${profile.email}`}>{profile.email}</a> &nbsp;|&nbsp;
         <a href={profile.links.linkedin}>linkedin.com/in/balaji-chidam</a> &nbsp;|&nbsp;
         <a href="https://balachidam21.github.io">balachidam21.github.io</a>

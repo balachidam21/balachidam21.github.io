@@ -1,6 +1,13 @@
-/* Palette lifted verbatim from blog/continuous-batching-from-scratch.html.
+/* Palette lifted from blog/continuous-batching-from-scratch.html.
    Names are a contract: the migrated post stylesheets reference these by name.
-   Do not rename. See docs/superpowers/specs/2026-08-12-portfolio-rebuild-design.md */
+   Do not rename. See docs/superpowers/specs/2026-08-12-portfolio-rebuild-design.md
+
+   TWO VALUES ARE DELIBERATELY NOT VERBATIM — both failed WCAG AA and both are consumed
+   by the preserved post stylesheets, so restoring the originals would silently regress
+   contrast on the posts:
+     --violet-alt  #7d6bd6 -> #5b46b8   (code.inl on --violet-bg was 3.68:1, now 6.04:1)
+     --text-light  55% L   -> 40% L     (body/meta text was 3.60:1, now 6.23:1)
+   Everything else, including the frozen diagram palette, is unchanged. */
 :root {
   --violet: #6e57e0;
   --violet-alt: #5b46b8;

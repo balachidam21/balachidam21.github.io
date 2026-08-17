@@ -36,6 +36,7 @@ export const profile = {
   title: 'Principal Consultant, AI Engineer',
   location: 'San Francisco Bay Area, CA',
   email: 'balaji21.chidambaram@gmail.com',
+  phone: '(669) 263-5630',
   links: {
     linkedin: 'https://www.linkedin.com/in/balaji-chidam/',
     github: 'https://github.com/balachidam21',
