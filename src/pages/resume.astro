@@ -21,9 +21,7 @@
 //   npm run build
 import { profile } from '../data/profile';
 
-const onePage = profile.experience.filter(
-  (x) => x.company === 'Genpact' || x.company === 'Keck Medicine of USC' || x.company === 'Sayari Labs'
-);
+const onePage = profile.experience.filter((x) => x.resume);
 ---
 
 <!doctype html>

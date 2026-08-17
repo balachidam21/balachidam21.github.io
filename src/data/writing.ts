@@ -11,12 +11,18 @@ export interface WritingEntry {
   slug: string;
   title: string;
   description: string;
-  date: string; // ISO
+  /** ISO date, zero-padded. Sorting is lexicographic, so '2026-1-01' would sort ABOVE
+   *  '2026-08-16'. Enforced at module load below rather than trusted. */
+  date: string;
   tags: string[];
   href: string;
-  external?: boolean;
   meta?: string;
 }
+
+/** Derived, never stored. An `external` field kept alongside `href` can disagree with
+ *  it, and the failure is silent: an external link marked internal loses both
+ *  target="_blank" and rel="noopener noreferrer". */
+export const isExternal = (href: string) => /^https?:\/\//.test(href);
 
 export const writingIndex: WritingEntry[] = [
   {
@@ -46,7 +52,16 @@ export const writingIndex: WritingEntry[] = [
     date: '2026-01-01',
     tags: ['research'],
     href: 'https://doi.org/10.1109/ACDSA67686.2026.11467982',
-    external: true,
     meta: 'IEEE ACDSA, 2026',
   },
-].sort((a, b) => b.date.localeCompare(a.date));
+];
+
+// Zero-padding is not decorative: the sort is lexicographic. Fail loudly at build time
+// rather than silently mis-ordering the homepage once a fourth entry exists.
+for (const e of writingIndex) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(e.date)) {
+    throw new Error(`writingIndex: "${e.slug}" has date "${e.date}" — must be zero-padded YYYY-MM-DD`);
+  }
+}
+
+writingIndex.sort((a, b) => b.date.localeCompare(a.date));

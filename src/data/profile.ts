@@ -25,6 +25,10 @@ export interface Role {
   location: string;
   summary: string[];
   engagements?: Engagement[];
+  /** Include this role in the one-page PDF. Declared here rather than filtered by
+   *  company name in resume.astro, where adding a new employer would silently omit it
+   *  from the résumé with no error and green CI. */
+  resume?: boolean;
 }
 
 export const profile = {
@@ -59,6 +63,7 @@ export const profile = {
   experience: [
     {
       company: 'Genpact',
+      resume: true,
       role: 'Principal Consultant, AI Engineer',
       period: 'Mar 2026 – Present',
       location: 'Remote, USA',
@@ -81,6 +86,7 @@ export const profile = {
     },
     {
       company: 'Genpact',
+      resume: true,
       role: 'Assistant Manager, AI Engineer',
       period: 'May 2024 – Feb 2026',
       location: 'Remote, USA',
@@ -137,6 +143,7 @@ export const profile = {
     },
     {
       company: 'Keck Medicine of USC',
+      resume: true,
       role: 'Data Engineer (Contract)',
       period: 'Feb 2024 – Dec 2024',
       location: 'Los Angeles, CA',
@@ -147,6 +154,7 @@ export const profile = {
     },
     {
       company: 'Keck Medicine of USC',
+      resume: true,
       role: 'Marketing Data Analyst',
       period: 'Sep 2022 – Dec 2023',
       location: 'Los Angeles, CA',
@@ -157,6 +165,7 @@ export const profile = {
     },
     {
       company: 'Sayari Labs',
+      resume: true,
       role: 'Data Engineer Intern',
       period: 'May 2023 – Jul 2023',
       location: 'Washington, D.C.',
@@ -185,7 +194,7 @@ export const profile = {
         'Architected and optimized an API Gateway managing traffic surges and halving response times.',
       ],
     },
-  ] as Role[],
+  ] satisfies Role[],
 
   education: [
     {

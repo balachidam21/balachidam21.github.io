@@ -1,5 +1,5 @@
 import rss from '@astrojs/rss';
-import { writingIndex } from '../data/writing';
+import { writingIndex, isExternal } from '../data/writing';
 
 export function GET(context) {
   return rss({
@@ -10,7 +10,7 @@ export function GET(context) {
       title: e.title,
       description: e.description,
       pubDate: new Date(e.date + 'T12:00:00Z'),
-      link: e.external ? e.href : new URL(e.href, context.site).href,
+      link: isExternal(e.href) ? e.href : new URL(e.href, context.site).href,
     })),
   });
 }

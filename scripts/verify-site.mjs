@@ -24,7 +24,17 @@ if (!existsSync(DIST)) {
 
 const files = walk(DIST);
 const html = files.filter((f) => f.endsWith('.html'));
-const css = files.filter((f) => f.endsWith('.css'));
+// CSS lives in TWO places. Astro's build.inlineStylesheets:'auto' inlines any
+// stylesheet under ~4kB straight into the HTML, so globbing .css files alone silently
+// skips every small component's styles. That blind spot let SectionNav ship with
+// Astro-scoped selectors that could never match its runtime-created nodes -- the exact
+// bug check 6 exists to catch -- while this harness stayed green. Never narrow this.
+const cssFiles = files.filter((f) => f.endsWith('.css'));
+const css = cssFiles;
+const inlineCss = html
+  .map((f) => [...readFileSync(f, 'utf8').matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)].map((m) => m[1]).join('\n'))
+  .join('\n');
+const allCss = cssFiles.map((f) => readFileSync(f, 'utf8')).join('\n') + '\n' + inlineCss;
 const allHtml = html.map((f) => readFileSync(f, 'utf8')).join('\n');
 
 // 1. No client engagement names anywhere in the built output.
@@ -148,8 +158,16 @@ for (const f of postCss) {
   }
 }
 
+// 6b. Any component that creates DOM at runtime must have GLOBAL styles, for the same
+// reason as check 6. Scope-suffixed selectors on those hooks match nothing.
+for (const hook of ['.toc-list', '.toc', '.to-top']) {
+  const scoped = new RegExp(`\\${hook}\\[data-astro-cid`);
+  if (scoped.test(allCss)) {
+    fail(`${hook} is Astro-scoped — SectionNav builds its links at runtime, so scoped rules never match and the nav renders unstyled`);
+  }
+}
+
 // 7. Diagram custom properties must resolve somewhere in the CSS.
-const allCss = css.map((f) => readFileSync(f, 'utf8')).join('\n');
 for (const prop of [
   '--violet', '--violet-alt', '--violet-light', '--violet-bg', '--title', '--text',
   '--text-light', '--body', '--container', '--line', '--accent2', '--ink', '--muted',

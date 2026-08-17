@@ -1,7 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { profile } from '../data/profile';
-import { writingIndex } from '../data/writing';
+import { writingIndex, isExternal } from '../data/writing';
 import SectionNav from '../components/SectionNav.astro';
 
 const latest = writingIndex.slice(0, 3);
@@ -44,10 +44,10 @@ const fmt = (iso: string) =>
         <li>
           <a
             href={e.href}
-            target={e.external ? '_blank' : undefined}
-            rel={e.external ? 'noopener noreferrer' : undefined}
+            target={isExternal(e.href) ? '_blank' : undefined}
+            rel={isExternal(e.href) ? 'noopener noreferrer' : undefined}
           >
-            <b>{e.title}{e.external && <span class="ext"> ↗</span>}</b>
+            <b>{e.title}{isExternal(e.href) && <span class="ext"> ↗</span>}</b>
             <span class="t-meta">{fmt(e.date)}{e.tags.map((t) => <i>#{t}</i>)}</span>
             <span class="t-desc">{e.description}</span>
           </a>

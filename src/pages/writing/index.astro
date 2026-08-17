@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import { writingIndex } from '../../data/writing';
+import { writingIndex, isExternal } from '../../data/writing';
 
 // timeZone: 'UTC' is required -- new Date('2026-01-01') is UTC midnight, which
 // renders as 'Dec 2025' in any negative-offset locale.
@@ -31,10 +31,10 @@ const fmt = (iso: string) =>
           <h2>
             <a
               href={e.href}
-              target={e.external ? '_blank' : undefined}
-              rel={e.external ? 'noopener noreferrer' : undefined}
+              target={isExternal(e.href) ? '_blank' : undefined}
+              rel={isExternal(e.href) ? 'noopener noreferrer' : undefined}
             >
-              {e.title}{e.external && <span class="ext" aria-label="external link"> ↗</span>}
+              {e.title}{isExternal(e.href) && <span class="ext" aria-label="external link"> ↗</span>}
             </a>
           </h2>
           <p class="desc">{e.description}</p>
