@@ -219,13 +219,40 @@ Astro 5. Static output, zero client JS by default.
 A typed content schema means a malformed post fails the build rather than shipping
 broken. Frontmatter: `title`, `description`, `date`, `tags[]`, `draft?`.
 
-### Migration of the existing post
+### Migration of the two posts
 
-`blog/continuous-batching-from-scratch.html` contains hand-authored SVG diagrams driven
-by a `<script>` that reads CSS custom properties **by name**, with the source marked
-`diagram palette: FROZEN`. The migration must preserve those variable names exactly or
-the diagrams break. This is the highest-risk part of the migration and is verified
-visually, not by build success.
+Inspected 2026-08-16. An earlier draft of this spec claimed the diagram `<script>` reads
+CSS custom properties by name. **That is wrong** — neither post calls `getComputedStyle`
+or `getPropertyValue`, and neither references a custom-property name as a string literal.
+The actual mechanism:
+
+| Post | Lines | `<style>` | `<script>` | `<svg>` |
+|---|---|---|---|---|
+| `continuous-batching-from-scratch.html` | 410 | 120 lines | 96 lines | 6 |
+| `paged-attention-from-scratch.html` | 738 | 128 lines | none | 8 |
+
+The script in the continuous-batching post builds SVG nodes at runtime with
+`document.createElementNS`, assigning **CSS class names** (`stepnum`, `lanelbl`, …). The
+`<style>` block styles those classes using `var(--…)`. Its own series colors are a
+hardcoded hex map, independent of the palette. The PagedAttention post has no script at
+all — its SVG is static markup.
+
+**The real hazard is Astro's scoped styles.** Astro scopes component CSS by stamping a
+hashed attribute onto elements *at build time*. Nodes created at runtime by
+`createElementNS` never receive that attribute, so scoped selectors would not match and
+every generated diagram would render unstyled — with a **passing build and no error**.
+
+Mitigation, in order of preference:
+
+1. Keep each post's `<style>` block as `<style is:global>` inside its own route, so
+   selectors are not rewritten.
+2. Keep `<style>`, `<script>`, and body markup together as one unit per post. Do not
+   split the script into a shared bundle — the class names are post-local contracts.
+3. Preserve the `--*` custom property names verbatim. They are still the palette source
+   for the static SVG and the class rules, even though JS never reads them.
+
+Verified visually per post, never by build success. A green build is specifically not
+evidence here.
 
 ---
 
