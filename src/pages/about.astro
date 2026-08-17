@@ -1,0 +1,232 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { profile } from '../data/profile';
+---
+
+<BaseLayout
+  title="About — Balaji Chidambaram"
+  description="Principal Consultant, AI Engineer. Experience, education, publications and skills."
+>
+  <div class="wrap">
+    <header class="head">
+      <h1>About</h1>
+      <p class="lede">{profile.lede}</p>
+      <p class="links">
+        <a href="/Resume_Balaji_Chidambaram.pdf" target="_blank" rel="noopener">Résumé (PDF)</a>
+        <a href={profile.links.github} target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href={profile.links.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn</a>
+        <a href={`mailto:${profile.email}`}>Email</a>
+      </p>
+    </header>
+
+    <section class="block">
+      <h2>Experience</h2>
+      {profile.experience.map((x) => (
+        <article class="job">
+          <div class="job-head">
+            <b>{x.role}</b>
+            <span class="co">{x.company}</span>
+            <i class="period">{x.period}</i>
+          </div>
+          <p class="loc">{x.location}</p>
+          <ul class="bullets">
+            {x.bullets.map((b) => <li>{b}</li>)}
+          </ul>
+        </article>
+      ))}
+    </section>
+
+    <section class="block">
+      <h2>Publication</h2>
+      <p class="pub">
+        {profile.publication.authors}.
+        <a href={profile.publication.doi} target="_blank" rel="noopener noreferrer">
+          “{profile.publication.title}”
+        </a>
+        <span class="venue">{profile.publication.venue}</span>
+      </p>
+    </section>
+
+    <section class="block">
+      <h2>Education</h2>
+      {profile.education.map((e) => (
+        <div class="edu">
+          <div class="job-head">
+            <b>{e.degree}</b>
+            <span class="co">{e.school}</span>
+            <i class="period">{e.period}</i>
+          </div>
+          <p class="loc">{e.detail}</p>
+        </div>
+      ))}
+    </section>
+
+    <section class="block">
+      <h2>Skills</h2>
+      <dl class="skills">
+        {profile.skills.map((s) => (
+          <>
+            <dt>{s.label}</dt>
+            <dd>{s.value}</dd>
+          </>
+        ))}
+      </dl>
+    </section>
+
+    <section class="block">
+      <h2>Certifications</h2>
+      <ul class="certs">
+        {profile.certifications.map((c) => (
+          <li><a href={c.href} target="_blank" rel="noopener noreferrer">{c.name}</a></li>
+        ))}
+      </ul>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .wrap {
+    width: min(100% - 2.5rem, 48rem);
+    margin-inline: auto;
+    padding-block: 1.5rem 3rem;
+  }
+  .head {
+    margin-bottom: 2.5rem;
+  }
+  h1 {
+    color: var(--title);
+    font-size: clamp(1.8rem, 4vw, 2.2rem);
+    letter-spacing: -0.02em;
+    margin: 0 0 0.7rem;
+  }
+  .lede {
+    margin: 0 0 1.1rem;
+    max-width: 58ch;
+  }
+  .links {
+    display: flex;
+    gap: 1.2rem;
+    flex-wrap: wrap;
+    margin: 0;
+  }
+  .links a {
+    color: var(--violet);
+    text-decoration: none;
+    font-size: 0.95rem;
+  }
+  .links a:hover {
+    text-decoration: underline;
+  }
+
+  .block {
+    padding-block: 1.75rem;
+    border-top: 1px solid var(--line);
+  }
+  .block h2 {
+    color: var(--title);
+    font-size: 1.25rem;
+    margin: 0 0 1.3rem;
+    letter-spacing: -0.01em;
+  }
+
+  .job,
+  .edu {
+    margin-bottom: 1.9rem;
+  }
+  .job:last-child,
+  .edu:last-child {
+    margin-bottom: 0;
+  }
+  .job-head {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    align-items: baseline;
+    margin-bottom: 0.2rem;
+  }
+  .job-head b {
+    color: var(--title);
+    font-weight: 600;
+  }
+  .job-head .co {
+    color: var(--violet);
+  }
+  .job-head .period {
+    color: var(--text-light);
+    font-style: normal;
+    font-size: 0.85rem;
+    margin-left: auto;
+  }
+  .loc {
+    color: var(--text-light);
+    font-size: 0.85rem;
+    margin: 0 0 0.6rem;
+  }
+  .bullets {
+    margin: 0;
+    padding-left: 1.1rem;
+  }
+  .bullets li {
+    margin-bottom: 0.45rem;
+    font-size: 0.95rem;
+  }
+
+  .pub {
+    margin: 0;
+    font-size: 0.97rem;
+  }
+  .pub a {
+    color: var(--violet);
+    text-decoration: none;
+  }
+  .pub a:hover {
+    text-decoration: underline;
+  }
+  .venue {
+    color: var(--text-light);
+    font-style: italic;
+    display: block;
+    margin-top: 0.3rem;
+    font-size: 0.9rem;
+  }
+
+  .skills {
+    margin: 0;
+    display: grid;
+    gap: 1rem;
+  }
+  .skills dt {
+    color: var(--title);
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+  }
+  .skills dd {
+    margin: 0;
+    font-size: 0.94rem;
+    color: var(--text);
+  }
+
+  .certs {
+    margin: 0;
+    padding-left: 1.1rem;
+  }
+  .certs li {
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+  }
+  .certs a {
+    color: var(--violet);
+    text-decoration: none;
+  }
+  .certs a:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 640px) {
+    .job-head .period {
+      margin-left: 0;
+      width: 100%;
+    }
+  }
+</style>
