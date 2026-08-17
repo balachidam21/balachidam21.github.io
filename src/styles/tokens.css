@@ -1,0 +1,68 @@
+/* Palette lifted verbatim from blog/continuous-batching-from-scratch.html.
+   Names are a contract: the migrated post stylesheets reference these by name.
+   Do not rename. See docs/superpowers/specs/2026-08-12-portfolio-rebuild-design.md */
+:root {
+  --violet: #6e57e0;
+  --violet-alt: #7d6bd6;
+  --violet-light: #c2b6fc;
+  --violet-bg: #f0edfb;
+  --title: hsl(250, 8%, 15%);
+  --text: hsl(250, 9%, 32%);
+  --text-light: hsl(250, 8%, 55%);
+  --body: #fcfcff;
+  --container: #ffffff;
+  --line: #e7e4f2;
+  --sans: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: "SF Mono", ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
+
+  /* diagram palette: FROZEN — migrated post stylesheets reference these by name */
+  --accent: #6e57e0;
+  --accent2: #9a4a2f;
+  --ink: #1c1c1e;
+  --muted: #6b6b70;
+  --idle: #e3e1dc;
+  --idle-ink: #9a978f;
+  --none: #cfcdc7;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --title: hsl(250, 10%, 94%);
+    --text: hsl(250, 8%, 78%);
+    --text-light: hsl(250, 6%, 58%);
+    --body: #131218;
+    --container: #1a1922;
+    --line: #2b2936;
+    --violet: #9b86f5;
+    --violet-light: #b9a9fa;
+    --violet-bg: #1e1a33;
+    --ink: #e9e9ee;
+    --muted: #9a97a6;
+    --idle: #2e2c38;
+    --idle-ink: #6f6c7d;
+    --none: #3a3846;
+  }
+}
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--body);
+  color: var(--text);
+  font-family: var(--sans);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--violet); }
+
+img { max-width: 100%; height: auto; }
+
+.container { width: min(100% - 2.5rem, 60rem); margin-inline: auto; }
+
+:focus-visible { outline: 2px solid var(--violet); outline-offset: 2px; }
