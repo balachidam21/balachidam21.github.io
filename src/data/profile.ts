@@ -17,12 +17,9 @@ export const profile = {
     'Principal Consultant, AI Engineer at Genpact. I take multi-agent platforms from ' +
     'prototype to production for enterprise teams — and make them auditable once they are there.',
 
-  metrics: [
-    { value: '100+', label: 'enterprise users' },
-    { value: '400+', label: 'governed KPIs' },
-    { value: '40→60%', label: 'user acceptance' },
-    { value: '20+', label: 'MCP skills' },
-  ],
+  // A metrics strip (100+ users / 400+ KPIs / 40→60% / 20+ MCP skills) was removed
+  // 2026-08-16: it read as out of place on the page. The same figures still appear
+  // in context inside the experience bullets, which is where they belong.
 
   experience: [
     {

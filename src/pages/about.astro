@@ -9,6 +9,17 @@ import { profile } from '../data/profile';
 >
   <div class="wrap">
     <header class="head">
+      <img
+        class="headshot"
+        src="/assets/img/headshot.jpg"
+        srcset="/assets/img/headshot-small.jpg 220w, /assets/img/headshot.jpg 440w"
+        sizes="(max-width: 640px) 96px, 120px"
+        width="120"
+        height="120"
+        alt="Balaji Chidambaram"
+        loading="eager"
+        decoding="async"
+      />
       <h1>About</h1>
       <p class="lede">{profile.lede}</p>
       <p class="links">
@@ -92,6 +103,21 @@ import { profile } from '../data/profile';
   }
   .head {
     margin-bottom: 2.5rem;
+  }
+  .headshot {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 1rem;
+    border: 3px solid var(--container);
+    box-shadow: 0 0 0 1px var(--line);
+  }
+  @media (max-width: 640px) {
+    .headshot {
+      width: 96px;
+      height: 96px;
+    }
   }
   h1 {
     color: var(--title);
