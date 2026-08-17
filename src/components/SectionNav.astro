@@ -58,7 +58,9 @@ const { min = 3, label = 'On this page' } = Astro.props;
       let n = 2;
       while (used.has(id)) id = `${slug(text)}-${n++}`;
       used.add(id);
-      if (!h.id) h.id = id;
+      // Assign unconditionally. Previously a heading that already carried a colliding
+      // id kept it while the link got the deduped "-2" form, producing a dead anchor.
+      h.id = id;
       return { id, text, el: h };
     });
 

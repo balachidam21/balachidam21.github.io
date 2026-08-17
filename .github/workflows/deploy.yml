@@ -5,6 +5,11 @@ name: Deploy site
 on:
   push:
     branches: [main]
+  # Without this the harness only ran AFTER a merge landed on main, so it could not
+  # block anything -- `gh pr checks` reported no checks at all on PR #3. The whole
+  # premise of verify-site.mjs is that a green build is not sufficient evidence; that
+  # is worth nothing if it reports after the fact.
+  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -48,6 +53,8 @@ jobs:
 
   deploy:
     needs: build
+    # Build+verify run on every PR; publishing stays main-only.
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     environment:
       name: github-pages

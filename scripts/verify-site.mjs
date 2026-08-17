@@ -142,7 +142,7 @@ for (const f of ['dist/index.html', cbPost]) {
 // silently stop matching and every diagram would render unstyled.
 // Each post has its own diagram class vocabulary — verified against the sources.
 const POST_DIAGRAM_CLASSES = [
-  { match: /continuous-batching/, classes: /\.(stepnum|lanelbl|cell-lbl)\s*[,.{]/ },
+  { match: /continuous-batching/, classes: /\.(stepnum|lanelbl|cell-lbl)\s*[,.{]/, also: ['.divider', '.dlabel'] },
   { match: /paged-attention/, classes: /\.(s-lbl|s-num|s-mid|s-sub)\s*[,.{]/ },
 ];
 const postCss = css.filter((f) => POST_DIAGRAM_CLASSES.some((p) => p.match.test(f)));
@@ -154,6 +154,11 @@ for (const f of postCss) {
   }
   const spec = POST_DIAGRAM_CLASSES.find((p) => p.match.test(f));
   if (spec && !spec.classes.test(src)) fail(`${f}: expected diagram class rules not found`);
+  // .divider has no visible default -- SVG strokes are `none` unless styled, so losing
+  // this rule makes the wave-barrier line disappear with everything else intact.
+  for (const cls of spec?.also ?? []) {
+    if (!src.includes(cls)) fail(`${f}: missing ${cls} rule — the element it styles renders invisibly, not incorrectly`);
+  }
   // The post CSS still carries the original page's chrome rules (.nav, .site-footer,
   // .socials). That is harmless ONLY because BaseLayout namespaces its own chrome as
   // .pf-nav / .pf-footer. If the layout ever reverts to .site-footer, post pages would
@@ -196,11 +201,40 @@ for (const [f, n] of Object.entries(svgExpect)) {
   if (found !== n) fail(`${f}: expected ${n} <svg>, found ${found}`);
 }
 
-// 8b. Every custom property referenced anywhere must be defined, in BOTH themes if
-// it is defined in dark at all. A var() with no definition renders as nothing.
+// 8b. Every referenced custom property must be defined, and anything defined ONLY in
+// the dark block resolves to nothing in light mode. The previous version of this check
+// was a flat `allCss.includes('--x:')`, which cannot tell the two apart -- it asserted
+// a guarantee in its comment that its code did not implement.
+// Extract dark-mode blocks by brace matching, NOT by regex: the built CSS is minified
+// to a single line, so any pattern anchored on newlines silently matches nothing and
+// every token then looks light-defined. (First attempt did exactly that and passed a
+// deliberately dark-only token.)
+const darkBlockBodies = [];
+{
+  const re = /@media[^{]*prefers-color-scheme\s*:\s*dark[^{]*\{/g;
+  let m;
+  while ((m = re.exec(allCss))) {
+    let depth = 1;
+    let i = m.index + m[0].length;
+    const from = i;
+    while (i < allCss.length && depth > 0) {
+      if (allCss[i] === '{') depth++;
+      else if (allCss[i] === '}') depth--;
+      i++;
+    }
+    darkBlockBodies.push(allCss.slice(from, i - 1));
+  }
+}
+const darkCss = darkBlockBodies.join('\n');
+let lightCss = allCss;
+for (const b of darkBlockBodies) lightCss = lightCss.split(b).join('');
+const defsIn = (text) => new Set([...text.matchAll(/(--[a-z0-9-]+)\s*:/g)].map((m) => m[1]));
+const allDefs = defsIn(allCss);
+const lightDefs = defsIn(lightCss);
 const referenced = new Set([...allCss.matchAll(/var\((--[a-z0-9-]+)\)/g)].map((m) => m[1]));
 for (const prop of referenced) {
-  if (!allCss.includes(`${prop}:`)) fail(`custom property ${prop} is used but never defined`);
+  if (!allDefs.has(prop)) fail(`custom property ${prop} is used but never defined`);
+  else if (!lightDefs.has(prop)) fail(`custom property ${prop} is defined ONLY inside a dark-mode block — it resolves to nothing in light mode`);
 }
 
 // 8c-pre. The feed must actually contain the writing, and be discoverable.
@@ -244,7 +278,7 @@ const resolveRoute = (href) => {
 };
 for (const f of html) {
   const src = readFileSync(f, 'utf8');
-  for (const m of src.matchAll(/href="([^"]+)"/g)) {
+  for (const m of src.matchAll(/(?:href|src)="([^"]+)"/g)) {
     const href = m[1];
     if (/^(https?:|mailto:|tel:|data:|#)/.test(href)) continue;
     if (!href.startsWith('/')) {
@@ -252,7 +286,43 @@ for (const f of html) {
       continue;
     }
     const target = resolveRoute(href);
-    if (target && !existsSync(target)) fail(`${f}: internal link "${href}" resolves to missing ${target}`);
+    if (!target) {
+      fail(`${f}: link "${href}" resolves to nothing — an empty href silently reloads the page`);
+      continue;
+    }
+    if (!existsSync(target)) fail(`${f}: internal link "${href}" resolves to missing ${target}`);
+  }
+}
+
+// 8e. continuous-batching-diagrams.js calls getElementById('static'|'cont'|'arch') with
+// no null guard, at top level. A renamed id throws on the first setAttribute and aborts
+// the rest of the file, blanking ALL THREE diagrams -- while check 8's <svg> count still
+// reads 3 and check 5b still finds the <script>. Assert the ids the script requires.
+const cbHtml = 'dist/writing/continuous-batching-from-scratch/index.html';
+if (existsSync(cbHtml)) {
+  const src = readFileSync(cbHtml, 'utf8');
+  for (const id of ['static', 'cont', 'arch']) {
+    if (!new RegExp(`id="${id}"`).test(src)) {
+      fail(`${cbHtml}: missing <svg id="${id}"> — the diagram script targets it by id and aborts all three diagrams if absent`);
+    }
+  }
+}
+
+// 8f. Both posts must keep enough headings for the section nav to render. SectionNav
+// bails below 3 h2s, and that bail is indistinguishable from "the page legitimately has
+// no sections" -- so the nav would vanish from the two pages it exists for, silently.
+for (const post of ['continuous-batching-from-scratch', 'paged-attention-from-scratch']) {
+  const f = `dist/writing/${post}/index.html`;
+  if (!existsSync(f)) continue;
+  const n = (readFileSync(f, 'utf8').match(/<h2/g) || []).length;
+  if (n < 3) fail(`${f}: ${n} <h2> — SectionNav needs at least 3 or it silently renders nothing`);
+}
+
+// 8g. /resume is skipped by the SEO loop because it is noindex. Assert that it is,
+// otherwise the skip silently protects an indexable 7.8pt print page.
+if (existsSync('dist/resume/index.html')) {
+  if (!readFileSync('dist/resume/index.html', 'utf8').includes('name="robots"')) {
+    fail('dist/resume/index.html: skipped by the SEO checks as "noindex" but carries no robots meta');
   }
 }
 
