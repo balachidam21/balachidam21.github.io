@@ -80,9 +80,11 @@ const onePage = profile.experience.filter(
     <section>
       <h2>Skills</h2>
       <ul class="tight-list">
-        {profile.skills.map((s) => (
-          <li><b>{s.label}:</b> {s.value}</li>
-        ))}
+        {profile.skills
+          .filter((s) => (s.resumeCount ?? s.items.length) > 0)
+          .map((s) => (
+            <li><b>{s.label}:</b> {s.items.slice(0, s.resumeCount ?? s.items.length).join(', ')}</li>
+          ))}
         <li>
           <b>Certifications:</b>{' '}
           {profile.certifications.map((c, i) => (

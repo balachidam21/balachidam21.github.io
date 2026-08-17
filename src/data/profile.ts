@@ -228,21 +228,94 @@ export const profile = {
     },
   ],
 
+  // Grouped for chip rendering on /about. Every item traces to cv.md — either its
+  // Skills section or an experience bullet (Power BI, Streamlit, Genie AI/BI, Tableau,
+  // Looker, Adverity, Scrapy, Lakebase, LLM-as-a-judge and prompt-injection guardrails
+  // all appear in the experience text but were missing from the CV's own skills line).
   skills: [
     {
-      label: 'Specialties',
-      value:
-        'Agentic AI & Multi-Agent Systems (ReAct, Hierarchical Delegation, Supervisor), MCP, Agent Skills, Distributed Systems Design, RAG & Vector Databases (pgvector), Agent Governance & Lineage, LLM Evaluation & Observability, Knowledge Graphs, ML Forecasting, Object-Oriented Design',
+      label: 'Agentic AI & LLM systems',
+      resumeCount: 8,
+      items: [
+        'Multi-agent systems',
+        'ReAct',
+        'Hierarchical delegation',
+        'Supervisor pattern',
+        'MCP',
+        'Agent Skills',
+        'RAG',
+        'Vector databases (pgvector)',
+        'Agent governance & lineage',
+        'LLM evaluation & observability',
+        'LLM-as-a-judge',
+        'Prompt-injection guardrails',
+        'Least-privilege tool access',
+      ],
     },
-    { label: 'Languages', value: 'Python (PySpark), SQL, C++, C, Java, React' },
     {
-      label: 'AI / ML',
-      value: 'LangGraph, MCP, Google ADK, TensorFlow, PyTorch, MLflow, TimeGPT, KGTK, Transformers',
+      label: 'Languages',
+      resumeCount: 7,
+      items: ['Python', 'PySpark', 'SQL', 'C++', 'C', 'Java', 'React'],
     },
     {
-      label: 'Platforms & Operations',
-      value:
-        'AWS (Lambda, EC2, VPC, RDS, Redshift), Databricks, Google Cloud (Vertex AI, Gemini, Document AI), Azure, Kubernetes, Docker, Airflow, Jenkins, Kafka, Cassandra, CI/CD, Salesforce Data Cloud',
+      label: 'AI / ML frameworks',
+      resumeCount: 8,
+      items: [
+        'LangGraph',
+        'MCP servers',
+        'Google ADK',
+        'TensorFlow',
+        'PyTorch',
+        'MLflow',
+        'TimeGPT',
+        'Transformers',
+        'KGTK',
+        'Document AI',
+        'Gemini',
+        'Genie AI/BI',
+      ],
+    },
+    {
+      label: 'Data & streaming',
+      resumeCount: 7,
+      items: [
+        'Apache Spark',
+        'Kafka',
+        'Cassandra',
+        'Airflow',
+        'Redshift',
+        'Salesforce Data Cloud',
+        'Scrapy',
+        'Adverity',
+        'Knowledge graphs',
+        'ML forecasting',
+      ],
+    },
+    {
+      label: 'Cloud & platform',
+      resumeCount: 6,
+      items: [
+        'AWS (Lambda, EC2, VPC, RDS, Redshift)',
+        'Google Cloud (Vertex AI)',
+        'Databricks',
+        'Databricks Apps',
+        'Lakebase',
+        'Azure',
+        'Kubernetes',
+        'Docker',
+        'Jenkins',
+        'CI/CD',
+      ],
+    },
+    {
+      label: 'Analytics & interfaces',
+      resumeCount: 4,
+      items: ['Power BI', 'Tableau', 'Looker', 'Streamlit'],
+    },
+    {
+      label: 'Engineering',
+      resumeCount: 0,
+      items: ['Distributed systems design', 'Object-oriented design', 'Data warehousing', 'ETL pipeline design'],
     },
   ],
 
