@@ -2,6 +2,7 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { profile } from '../data/profile';
 import { writingIndex } from '../data/writing';
+import SectionNav from '../components/SectionNav.astro';
 
 const latest = writingIndex.slice(0, 3);
 // timeZone: 'UTC' is required -- new Date('2026-01-01') is UTC midnight, which
@@ -11,6 +12,7 @@ const fmt = (iso: string) =>
 ---
 
 <BaseLayout title="Balaji Chidambaram — AI Engineer" description={profile.lede}>
+  <SectionNav />
   <section class="hero container">
     <div class="hero-text">
       <h1>{profile.headline}</h1>

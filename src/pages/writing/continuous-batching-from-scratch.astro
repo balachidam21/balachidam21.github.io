@@ -10,6 +10,7 @@
 // block would not match the SVG nodes the diagram script creates at runtime.
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import '../../styles/posts/continuous-batching.css';
+import SectionNav from '../../components/SectionNav.astro';
 import body from '../../legacy-posts/continuous-batching.html?raw';
 ---
 
@@ -19,6 +20,7 @@ import body from '../../legacy-posts/continuous-batching.html?raw';
   ogType="article"
   ogImage="/assets/img/animoji.png"
 >
+  <SectionNav />
   <Fragment set:html={body} />
   <script is:inline src="/js/continuous-batching-diagrams.js"></script>
 </BaseLayout>

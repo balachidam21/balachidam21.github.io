@@ -4,6 +4,7 @@
 // No diagram script — this post's SVG is static markup.
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import '../../styles/posts/paged-attention.css';
+import SectionNav from '../../components/SectionNav.astro';
 import body from '../../legacy-posts/paged-attention.html?raw';
 ---
 
@@ -13,5 +14,6 @@ import body from '../../legacy-posts/paged-attention.html?raw';
   ogType="article"
   ogImage="/assets/img/animoji.png"
 >
+  <SectionNav />
   <Fragment set:html={body} />
 </BaseLayout>
