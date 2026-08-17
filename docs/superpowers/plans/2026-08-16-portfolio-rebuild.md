@@ -1089,3 +1089,38 @@ Do not merge to `main`, do not push, do not trigger the workflow. Report: what w
 **Known deviation from spec:** The spec specified MDX Content Collections for posts. This plan keeps the two legacy posts as `.astro` routes and uses the collection for *future* markdown posts only, with `src/data/writing.ts` merging both for the index. Rationale: converting hand-authored HTML with an inline diagram script into MDX adds real breakage risk for zero benefit on posts that will never be edited as markdown. Flagged for the user rather than applied silently.
 
 **Not covered, deliberately:** Lighthouse ≥95 from the spec's verification list is checked manually in Task 12, not automated — adding Lighthouse CI would be a dependency out of proportion to a 5-page site.
+
+---
+
+## Execution Notes (2026-08-16)
+
+All 12 tasks completed on `portfolio-rebuild-2026`. Deviations from the plan as
+written, and why:
+
+| Planned | Actual | Reason |
+|---|---|---|
+| Astro 5.x, `@fontsource-variable/poppins` | Astro **7.2.2**, `@fontsource/poppins` | 5.x was a stale version guess; npm resolves latest at 7. The variable-font package does not exist — Poppins ships static weights. |
+| Posts wrapped in `PostLayout` with its own header | Posts use `BaseLayout` directly | Each article already carries its own eyebrow, `<h1>` and meta. A layout header duplicated the title. |
+| Post styles in `<style is:global>` blocks | Post styles as imported `.css` modules | Imported CSS is global in Astro by construction — same guarantee, less that can go wrong than remembering a directive. |
+| Résumé PDF via career-ops `pdf` mode | `/resume` Astro page → `generate-pdf.mjs` | The `pdf` mode is agent-driven and tailors per job; a site résumé needs neither. Driving the page from `profile.ts` means the PDF cannot drift from the site. |
+| Strip dead chrome rules from post CSS | Namespaced layout to `.pf-nav` / `.pf-footer` instead | The strip broke the build (lightningcss: dangling combinator) by cutting into multi-line selectors. The rename removes the collision outright. |
+
+Defects found and fixed during execution — none of which a passing build would have
+surfaced:
+
+1. **Missing palette tokens.** Both posts declared `--r1`…`--r5`, `--waste` and
+   `--waste-ink` in their own `:root`. Stripping that block (needed for dark mode to
+   reach post pages) would have silently broken the legend swatch gradient.
+2. **Footer collision.** Post CSS defines `.site-footer` as a violet block; BaseLayout
+   used the same class, so post pages rendered a different footer from every other page.
+3. **Mobile table overflow.** Both posts contain tables authored without a scroll
+   wrapper — 472px scrollWidth at a 375px viewport.
+
+Verification evidence: the continuous-batching script creates **129 SVG child nodes**
+across 3 diagrams, and `.lanelbl` computes to `rgb(28,28,30)` = `--ink` — proving the
+CSS reaches runtime-created nodes, which is the specific failure the spec warned about.
+PagedAttention renders 5 static SVGs with fills resolving to `--waste`, `--violet`,
+`--r1`. Both posts and all other pages show no horizontal overflow at 375px.
+
+**Not done — requires the user:** merging to `main`. The first workflow run replaces
+the live site, so it is deliberately left un-triggered.
