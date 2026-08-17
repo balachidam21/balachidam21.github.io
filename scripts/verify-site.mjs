@@ -32,6 +32,20 @@ for (const name of ['Cardinal', 'HESS', 'Finance One', 'Fin.AI', 'Contract CoPil
   if (allHtml.includes(name)) fail(`client name "${name}" appears in dist/`);
 }
 
+// 1b. No client CHARACTERISATION either. Withholding the name while describing the
+// client's industry ("for a healthcare distributor") still narrows identification, and
+// advertises that a constraint is being worked around -- the exact anonymisation pattern
+// the Disclosure Policy rejects. Caught in review of PR #3, where two engagement titles
+// had inferred the clients' industries from knowledge of who they were.
+for (const phrase of [
+  'healthcare distributor', 'energy company', 'oil and gas', 'pharmaceutical distributor',
+  'Fortune 500', 'Fortune 100', 'a major bank', 'a leading retailer',
+]) {
+  if (allHtml.toLowerCase().includes(phrase.toLowerCase())) {
+    fail(`client characterisation "${phrase}" appears in dist/ — name-free is not enough, do not describe the client`);
+  }
+}
+
 // 2. No stale self-description carried over from the 2024 site.
 for (const stale of ['graduate computer science student', 'currently mastering', 'go-to expert in data engineering']) {
   if (allHtml.toLowerCase().includes(stale.toLowerCase())) fail(`stale copy "${stale}" in dist/`);

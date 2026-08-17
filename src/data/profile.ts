@@ -1,6 +1,9 @@
-// Facts derived from ~/Documents/career-ops/cv.md, expanded with engagement-level
-// detail from the user's master résumé (Google Doc, 2026-06-30) at their direction.
-// Reformulate, never fabricate.
+// Facts derive from ~/Documents/career-ops/cv.md, expanded with engagement-level detail
+// from the user's own master résumé (Google Doc, 2026-06-30) at their explicit direction.
+// Both are the user's authored sources. Reformulate freely; never add a claim neither
+// source makes, and never characterise a client — not even by industry. Describing an
+// engagement as "for a healthcare distributor" is the anonymisation pattern the
+// Disclosure Policy rejects: it narrows identification while advertising the omission.
 //
 // CLIENT NAMES ARE DELIBERATELY OMITTED. The source documents name Cardinal Health,
 // HESS, Finance One, Fin.AI and Contract CoPilot; the site describes those engagements
@@ -70,7 +73,7 @@ export const profile = {
           bullets: [
             'Lead architect for a platform unifying Financial Planning, Supply Chain, Workforce Planning and Demand Planning across 4 business segments.',
             'Ran client discovery, set the multi-agent reference architecture, and delivered a production MVP on Databricks in 1 month with a cross-functional team of 3 engineers and 2 SMEs.',
-            'Resolved the engineering bottleneck around driver management by letting finance users curate KPI drivers directly through a purpose-built application, rather than filing tickets against hardcoded registries.',
+            'Resolved the engineering bottleneck around driver management by letting finance users curate KPI drivers directly through a custom application, replacing hardcoded driver registries.',
             'Architected a Lakebase-backed governance layer with versioned lineage — clone, edit, publish, audit — covering 400+ KPIs and drivers. Replaced Excel and hardcoded driver registries, cut data-readiness prep from over a month to a few days, and made agent dependency management explicit.',
           ],
         },
@@ -109,14 +112,14 @@ export const profile = {
           ],
         },
         {
-          name: 'Credit memo automation for a healthcare distributor',
+          name: 'Credit memo automation',
           period: 'Nov 2024 – Mar 2025',
           bullets: [
             'Architected an end-to-end GenAI pipeline on GCP and Salesforce handling highly diverse document formats across 100+ companies, replacing manual workflows with intelligent extraction to process 2,000+ memos monthly with high precision.',
           ],
         },
         {
-          name: 'Document extraction MVP for an energy company',
+          name: 'Document extraction MVP',
           period: 'Nov 2024 – Dec 2024',
           bullets: [
             'Built and deployed a document extraction parser with Document AI and Gemini LLMs, converting unstructured documents into structured formats for downstream retrieval.',
