@@ -45,8 +45,7 @@ problem is already present at post #1.
 ## Non-goals
 
 Custom domain · removing `old_version/` or the `…github.io copy` sibling folder ·
-writing new blog posts · analytics · a contact-form backend (mailto only) ·
-touching `blog/paged-attention-from-scratch.html` (see Constraints).
+writing new blog posts · analytics · a contact-form backend (mailto only).
 
 ---
 
@@ -88,12 +87,14 @@ the problem-class category. It does not block this build, which contains no such
 
 ## Constraints
 
-- **`blog/paged-attention-from-scratch.html` must not be touched, committed, or
-  referenced.** It is untracked WIP (745 lines) and the user explicitly excluded it on
-  2026-08-12. Every `git add` in this work must use explicit paths — never `git add -A`
-  or `git add .` — so it cannot be swept into a commit.
+- ~~`blog/paged-attention-from-scratch.html` must not be touched.~~ **Superseded
+  2026-08-16.** The user committed the post themselves on `blog/paged-attention-post`
+  and merged it to `main` via PR #2 (`4080874`). It is now tracked content on `main`
+  and is launch content — see Writing at launch. The earlier exclusion is void.
 - `main` must remain deployable and untouched until the user approves a preview.
 - The live site must not break during migration.
+- **Both `/blog/*.html` URLs must keep resolving.** Two posts now exist on `main`, so
+  the migration owes two redirect stubs, not one.
 
 ---
 
@@ -148,7 +149,15 @@ Bullets at `cv.md` granularity. No architecture deep-dives, no case-study links.
 ### Writing at launch
 
 1. **Continuous batching from scratch** — migrated from `blog/continuous-batching-from-scratch.html`. Tag `#deep-dive`.
-2. **IEEE ACDSA 2026** — "Effectiveness of Retrieval Augmented Generation, Contextualized Examples and Prompt Finetuning on Data Enrichment, Cleaning and Master Data Creation." Tag `#research`. Links to DOI `10.1109/ACDSA67686.2026.11467982`.
+2. **PagedAttention from scratch** — migrated from `blog/paged-attention-from-scratch.html`. Block allocator, gather kernel, preemption policy; measured KV-pool waste 84.6% → 2.8%. Tag `#deep-dive`. Added 2026-08-16 after the user merged PR #2; both posts share the same frozen-diagram-palette coupling described under Migration.
+3. **IEEE ACDSA 2026** — "Effectiveness of Retrieval Augmented Generation, Contextualized Examples and Prompt Finetuning on Data Enrichment, Cleaning and Master Data Creation." Tag `#research`. Links to DOI `10.1109/ACDSA67686.2026.11467982`.
+
+Two from-scratch inference-internals write-ups is a materially stronger launch than one.
+It also bears on the career assessment in `modes/_profile.md`, which gates **G2 —
+model training / inference-lifecycle depth** as a genuine gap on the basis that the
+profile is "app-layer (agents, RAG, orchestration)." That assessment was computed from
+`cv.md`, which describes neither post. Publishing them does not by itself change the
+gate — `cv.md` remains the input — but it makes the evidence public and reviewable.
 
 ### Projects — 3 kept, 3 cut
 
@@ -229,16 +238,30 @@ visually, not by build success.
    workflow ships.** The workflow is therefore on the critical path, not a finishing
    touch. Corollary: the first successful workflow run replaces the live site, so it must
    not run until the build is verified locally.
-2. **URL break — required mitigation, not optional.** PR #1 merged, so
-   `/blog/continuous-batching-from-scratch.html` **is live and indexable** (HTTP 200,
-   verified 2026-08-12). Astro would place the post at
-   `/writing/continuous-batching-from-scratch/`. A redirect stub at the old path is
-   mandatory; dropping it breaks a published URL. (An earlier draft of this spec judged
-   the stub optional on the belief the post had never been live. That was wrong — it went
-   live when PR #1 merged.)
-3. **Diagram palette coupling** — see Migration above.
-4. **Accidental commit of untracked WIP** — see Constraints. Mitigated by explicit-path
-   `git add` only.
+
+   **Confirmed empirically 2026-08-16.** PR #2 merged the PagedAttention post to `main`,
+   yet `/blog/paged-attention-from-scratch.html` returns **404** while `/` and the
+   continuous-batching post return 200. Merging to `main` now publishes nothing. The
+   continuous-batching post is live only because it shipped before the Pages source
+   changed. This is no longer a predicted risk — it is the current state.
+
+2. **URL break — required mitigation, not optional.** `/blog/continuous-batching-from-scratch.html`
+   **is live and indexable** (HTTP 200, verified 2026-08-16). Astro would place the posts
+   under `/writing/<slug>/`. Redirect stubs at **both** old paths are mandatory:
+
+   | Old path | Live? | New path |
+   |---|---|---|
+   | `/blog/continuous-batching-from-scratch.html` | 200 — must not break | `/writing/continuous-batching-from-scratch/` |
+   | `/blog/paged-attention-from-scratch.html` | 404 (never published) | `/writing/paged-attention-from-scratch/` |
+
+   The first stub protects a published URL. The second is cheap and prevents a dead link
+   from any share of the pre-merge branch. (An earlier draft judged stubs optional on the
+   belief the post had never been live. Wrong — it went live when PR #1 merged.)
+
+3. **Diagram palette coupling** — see Migration above. Now applies to **two** posts;
+   each must be verified visually and independently.
+4. ~~Accidental commit of untracked WIP.~~ Void as of 2026-08-16 — the file is tracked on
+   `main`. Explicit-path `git add` remains good practice but no longer guards anything.
 
 ---
 
@@ -247,17 +270,18 @@ visually, not by build success.
 Implementation is not complete until:
 
 - `npm run build` succeeds with zero errors.
-- The migrated post renders with diagrams intact, checked visually in a browser against
-  the original file — build success is not sufficient evidence.
+- **Both** migrated posts render with diagrams intact, checked visually in a browser
+  against the original files — build success is not sufficient evidence.
 - Every fact on the built site traces to `cv.md`. No claim appears that `cv.md` does not
   support.
 - No client name appears anywhere in the built output. Verified by grep for
   `Cardinal`, `HESS`, and `Finance One` across `dist/`.
-- `git status` shows `blog/paged-attention-from-scratch.html` still untracked.
-- After the first workflow deploy: the site root returns HTTP 200, and
-  `/blog/continuous-batching-from-scratch.html` still resolves (via redirect stub) rather
-  than 404ing. Because deploys are frozen until this workflow runs, its first run
-  *replaces the live site* — verify the build locally before letting it run on `main`.
+- After the first workflow deploy: the site root returns HTTP 200, and **both**
+  `/blog/*.html` paths resolve via redirect stub rather than 404ing. Because deploys are
+  frozen until this workflow runs, its first run *replaces the live site* — verify the
+  build locally before letting it run on `main`.
+- The PagedAttention post, currently 404 on the live site, resolves after deploy. This
+  doubles as the check that the deploy pipeline actually works.
 - The three retained project links, plus the DOI and all `cv.md` credential links,
   return HTTP 200.
 - Site renders correctly at 375px, 768px, and 1440px widths.
@@ -276,4 +300,6 @@ Implementation is not complete until:
 | Design | Evolved violet + metrics strip | Builds on established identity; metrics carry the skim |
 | Projects | Cut 3 of 6 | Junior-signal entries drag the average at Principal level |
 | Launch | Ship now, grow later | Current site actively misrepresents; waiting costs more than sparseness |
-| PagedAttention post | Untouched | User instruction, 2026-08-12 |
+| PagedAttention post | ~~Untouched~~ → launch content | User instruction 2026-08-12 superseded when they merged it to `main` themselves via PR #2, 2026-08-16 |
+| Commit messages | No `Co-Authored-By` or AI-attribution trailers | User instruction, 2026-08-12; their repos are public |
+| Build isolation | Separate git worktree at `../balachidam21.github.io-rebuild` | User keeps their own checkout on whatever branch they're using; this work never switches it |
