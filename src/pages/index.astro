@@ -1,6 +1,285 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { profile } from '../data/profile';
+import { writingIndex } from '../data/writing';
+
+const latest = writingIndex.slice(0, 3);
+const fmt = (iso: string) =>
+  new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
 ---
-<BaseLayout title="Balaji Chidambaram" description="AI engineer building agentic systems.">
-  <div class="container"><h1>Placeholder</h1></div>
+
+<BaseLayout title="Balaji Chidambaram — AI Engineer" description={profile.lede}>
+  <section class="hero container">
+    <h1>{profile.headline}</h1>
+    <p class="lede">{profile.lede}</p>
+    <p class="links">
+      <a href="/writing/">Writing</a>
+      <a href={profile.links.github} target="_blank" rel="noopener noreferrer">GitHub</a>
+      <a href={profile.links.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn</a>
+      <a href={`mailto:${profile.email}`}>Email</a>
+    </p>
+  </section>
+
+  <section class="container" aria-label="Selected metrics">
+    <div class="metrics">
+      {profile.metrics.map((m) => (
+        <div class="metric">
+          <b>{m.value}</b>
+          <span>{m.label}</span>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section class="container block">
+    <h2>Writing</h2>
+    <ul class="teasers">
+      {latest.map((e) => (
+        <li>
+          <a
+            href={e.href}
+            target={e.external ? '_blank' : undefined}
+            rel={e.external ? 'noopener noreferrer' : undefined}
+          >
+            <b>{e.title}{e.external && <span class="ext"> ↗</span>}</b>
+            <span class="t-meta">{fmt(e.date)}{e.tags.map((t) => <i>#{t}</i>)}</span>
+            <span class="t-desc">{e.description}</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+    <p><a class="more" href="/writing/">All writing →</a></p>
+  </section>
+
+  <section class="container block">
+    <h2>Experience</h2>
+    {profile.experience.slice(0, 3).map((x) => (
+      <article class="job">
+        <div class="job-head">
+          <b>{x.role}</b>
+          <span class="co">{x.company}</span>
+          <i class="period">{x.period}</i>
+        </div>
+        <ul class="bullets">
+          {x.bullets.map((b) => <li>{b}</li>)}
+        </ul>
+      </article>
+    ))}
+    <p><a class="more" href="/about/">Full background →</a></p>
+  </section>
+
+  <section class="container block">
+    <h2>Projects</h2>
+    <div class="cards">
+      {profile.projects.map((p) => (
+        <a class="card" href={p.href} target="_blank" rel="noopener noreferrer">
+          <b>{p.name}</b>
+          <span>{p.blurb}</span>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <section class="container block">
+    <h2>Get in touch</h2>
+    <p class="contact">
+      Based in {profile.location}. Reach me at
+      <a href={`mailto:${profile.email}`}>{profile.email}</a>.
+    </p>
+  </section>
 </BaseLayout>
+
+<style>
+  .hero {
+    padding-block: 3rem 1.5rem;
+  }
+  .hero h1 {
+    color: var(--title);
+    font-size: clamp(1.85rem, 5vw, 2.7rem);
+    line-height: 1.18;
+    letter-spacing: -0.02em;
+    margin: 0 0 0.9rem;
+    max-width: 20ch;
+  }
+  .lede {
+    font-size: 1.05rem;
+    margin: 0 0 1.4rem;
+    max-width: 56ch;
+  }
+  .links {
+    display: flex;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+    margin: 0;
+  }
+  .links a {
+    color: var(--violet);
+    text-decoration: none;
+    font-size: 0.95rem;
+  }
+  .links a:hover {
+    text-decoration: underline;
+  }
+
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-block: 2rem;
+  }
+  .metric {
+    background: var(--container);
+    padding: 1rem 1.1rem;
+  }
+  .metric b {
+    display: block;
+    color: var(--violet);
+    font-size: 1.45rem;
+    font-weight: 650;
+    line-height: 1.2;
+  }
+  .metric span {
+    font-size: 0.74rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-light);
+  }
+
+  .block {
+    padding-block: 2rem;
+  }
+  .block h2 {
+    color: var(--title);
+    font-size: 1.3rem;
+    letter-spacing: -0.01em;
+    margin: 0 0 1.3rem;
+  }
+
+  .teasers {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
+  }
+  .teasers a {
+    text-decoration: none;
+    display: block;
+    max-width: 62ch;
+  }
+  .teasers b {
+    display: block;
+    color: var(--title);
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    line-height: 1.4;
+  }
+  .teasers a:hover b {
+    color: var(--violet);
+  }
+  .ext {
+    color: var(--text-light);
+    font-size: 0.85em;
+  }
+  .t-meta {
+    display: flex;
+    gap: 0.6rem;
+    color: var(--text-light);
+    font-size: 0.8rem;
+    margin-bottom: 0.3rem;
+  }
+  .t-meta i {
+    color: var(--violet);
+    font-style: normal;
+  }
+  .t-desc {
+    color: var(--text);
+    font-size: 0.95rem;
+  }
+
+  .job {
+    margin-bottom: 1.8rem;
+    max-width: 66ch;
+  }
+  .job-head {
+    display: flex;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    align-items: baseline;
+    margin-bottom: 0.5rem;
+  }
+  .job-head b {
+    color: var(--title);
+    font-weight: 600;
+  }
+  .job-head .co {
+    color: var(--violet);
+  }
+  .job-head .period {
+    color: var(--text-light);
+    font-style: normal;
+    font-size: 0.85rem;
+    margin-left: auto;
+  }
+  .bullets {
+    margin: 0;
+    padding-left: 1.1rem;
+  }
+  .bullets li {
+    margin-bottom: 0.45rem;
+    font-size: 0.95rem;
+  }
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+  }
+  .card {
+    background: var(--container);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 1.1rem;
+    text-decoration: none;
+    display: block;
+  }
+  .card:hover {
+    border-color: var(--violet-light);
+  }
+  .card b {
+    display: block;
+    color: var(--title);
+    margin-bottom: 0.4rem;
+    font-weight: 600;
+    font-size: 0.98rem;
+  }
+  .card span {
+    color: var(--text-light);
+    font-size: 0.88rem;
+  }
+
+  .contact {
+    margin: 0;
+    max-width: 56ch;
+  }
+  .more {
+    color: var(--violet);
+    text-decoration: none;
+    font-size: 0.95rem;
+  }
+  .more:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 640px) {
+    .job-head .period {
+      margin-left: 0;
+      width: 100%;
+    }
+  }
+</style>
