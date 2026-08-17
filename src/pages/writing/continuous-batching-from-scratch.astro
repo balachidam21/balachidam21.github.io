@@ -1,0 +1,154 @@
+---
+// Legacy post preserved verbatim from blog/continuous-batching-from-scratch.html.
+// The article carries its own <h1>/eyebrow/meta, so BaseLayout is used directly --
+// a post layout with its own header would duplicate the title.
+// Styles are imported (global) not inlined: Astro scopes <style> blocks at build
+// time and the diagram script creates SVG nodes at runtime that never receive the
+// scoping attribute. See the spec's Migration section.
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import '../../styles/posts/continuous-batching.css';
+---
+
+<BaseLayout
+  title="Continuous batching from scratch — Balaji Chidambaram"
+  description="Building a continuous-batching LLM inference scheduler from scratch — why iteration-level scheduling makes serving fast, with timelines and a scoreboard."
+  ogType="article"
+>
+
+<article class="article">
+  <div class="eyebrow">nanogpt-served · llm inference</div>
+  <h1 class="post-title">Continuous batching from scratch</h1>
+  <p class="post-sub">How iteration-level scheduling makes LLM serving fast — built by hand,
+  then measured: <b>static 10 steps / 65% utilization → continuous 6 steps / 100%</b>,
+  same requests served.</p>
+  <div class="post-meta">Balaji Chidambaram · June 2026 · ~6 min read</div>
+
+<p>I've worked with LLM APIs a lot over the years, but I've always been fascinated
+by how everything works under the hood. Since undergrad I've been drawn to GPUs and
+distributed systems — one of my projects was large-scale processing with Hadoop and
+MapReduce — but I never had the resources to go deep, since access to serious GPUs
+was expensive back in 2020 (it's even more expensive now 🤣).</p>
+
+<p>Working with LLM APIs day-to-day now — Vertex AI, OpenAI, Claude — that old
+curiosity came back: how do these services serve live, millisecond inference for
+massive models at scale? I want to pivot my career toward inference and platform
+engineering, and this blog — starting with <code class="inl">nanogpt-served</code> —
+is me learning it by building it from scratch.</p>
+
+<p>When a server runs one model for many users, the requests arrive and finish at
+<em>different</em> times. The hard question isn't <em>which output belongs to which
+request</em> (that's solved by batch <b>row</b>) — it's <b>when do you decide the
+batch?</b> That single timing choice is the gap between a slow server and a fast one.</p>
+
+<h2><span class="n">01</span>Static batching — the slow default</h2>
+<p>Grab a batch, run it in <b>lockstep</b>, everyone leaves when the <b>slowest</b>
+finishes. Five requests needing <code class="inl">[2, 6, 3, 4, 2]</code> tokens,
+3 GPU lanes:</p>
+<div class="panel">
+  <div class="scroll"><svg id="static" role="img" aria-label="Static batching timeline"></svg></div>
+  <div class="legend">
+    <span><i class="sw req"></i>request decoded (useful)</span>
+    <span><i class="sw idle"></i>idle lane — finished request, dead weight</span>
+    <span><i class="sw none"></i>no lane (batch smaller than max)</span>
+  </div>
+  <div class="cap">Two wastes: <b>idle lanes</b> (R1 done at step 2 but still
+  decoded through step 6) and the <b>wave barrier</b> — R4/R5 can't start until
+  <em>all</em> of wave 1 drains, even though lanes sat free from step 3.</div>
+</div>
+
+<h2><span class="n">02</span>Continuous batching — re-decide every step</h2>
+<p>vLLM's term is <b>iteration-level scheduling</b>: the scheduler runs between
+<em>every</em> decode step. A finished request leaves immediately; a queued one
+takes the freed lane next step.</p>
+<div class="panel">
+  <div class="scroll"><svg id="cont" role="img" aria-label="Continuous batching timeline"></svg></div>
+  <div class="legend">
+    <span><i class="sw req"></i>request decoded (useful)</span>
+    <span><i class="sw none"></i>no lane (batch shrank — <b>not</b> wasted)</span>
+  </div>
+  <div class="cap">Watch <b>lane A</b>: R1 (blue) finishes at step 2, R4 (purple)
+  takes its lane at step 3 — no barrier, no wait. The only gap (lane C, step 6)
+  is the unavoidable <b>drain tail</b>: the batch shrinks to 2, it does
+  <em>not</em> decode dead weight. That's why util reads 100%, not 94%.</div>
+</div>
+
+<h2><span class="n">03</span>The scoreboard</h2>
+<p>A <b>slot-step</b> = one GPU lane used for one decode step — the atomic unit of
+work. <code class="inl">total</code> = lanes you paid for; <code class="inl">useful</code>
+= lanes that produced a token a request still wanted. Same model, same prompts,
+same 5 requests served:</p>
+<table>
+  <thead><tr><th>mode</th><th>steps</th><th>useful / total<br>slot-steps</th><th>utilization</th><th>served</th></tr></thead>
+  <tbody>
+    <tr><td>static</td><td>10</td><td>17 / 26</td><td>65%</td><td>5</td></tr>
+    <tr class="win"><td>continuous</td><td><span class="delta">6</span></td><td>17 / 17</td><td><span class="delta">100%</span></td><td>5</td></tr>
+  </tbody>
+</table>
+<div class="keypt">
+  <b>Identical work, identical output.</b> Continuous batching didn't skip
+  anything — <code class="inl">served</code> and <code class="inl">useful</code>
+  are unchanged. It just stopped wasting lanes: <b>26→17</b> slot-steps (no idle
+  lanes) and <b>10→6</b> steps (no head-of-line wait). On a real GPU those two
+  numbers are throughput&nbsp;↑ and time-to-first-token&nbsp;↓.
+</div>
+<div class="keypt">
+  <b>Why useful == total in continuous?</b> You <code class="inl">evict</code> at
+  the end of every step, so at decode time every lane holds a request that still
+  wants a token. No lane is ever spent on a finished request. Static can't evict
+  mid-wave (it's lockstep), so the gap is pure waste.
+</div>
+
+<h2><span class="n">04</span>Policy vs mechanism — the vLLM shape</h2>
+<p>The build accidentally drew the real architecture boundary. The
+<b>scheduler</b> decides batch membership each iteration (policy); the
+<b>decode</b> just runs a forward pass (mechanism) and is oblivious to <em>which</em>
+requests it holds.</p>
+<div class="panel scroll"><svg id="arch" role="img" aria-label="Policy over mechanism"></svg>
+  <div class="cap">This is vLLM in miniature: a <code class="inl">Scheduler</code>
+  over a model-execution layer. The missing piece between this toy and vLLM is
+  inside the mechanism box.</div>
+</div>
+
+<h2><span class="n">05</span>The core decision: admit → decode → evict</h2>
+<p>The scaffolding (request queue, the decode pass) is plumbing. The whole idea
+lives in the <b>ordering</b> of the step loop — admit waiting requests into free
+lanes, decode the current batch once, then evict whoever finished so their lane
+opens up <em>next</em> step:</p>
+<pre><code><span class="c"># ADMIT: fill every free lane (while, not if).</span>
+while len(self.running) &lt; self.max_batch_size and self.waiting:
+    self.running.append(self.waiting.pop(0))
+
+<span class="c"># DECODE: one forward over the current batch.</span>
+self._decode(self.running)
+self.steps += 1
+self.total_slot_steps  += len(self.running)   <span class="c"># cost</span>
+self.useful_slot_steps += len(self.running)   <span class="c"># all useful → evict-at-end</span>
+
+<span class="c"># EVICT: finished requests leave, freeing their lane for next step.</span>
+done = [r for r in self.running if r.done]
+self.finished.extend(done)
+self.running = [r for r in self.running if not r.done]</code></pre>
+
+<h2><span class="n">06</span>What's next — why a KV cache doesn't just drop in</h2>
+<div class="next">
+  <b>The deliberate cheat:</b> <code class="inl">_decode</code> <b>recomputes</b>
+  the full context every step — no KV cache. A naive single-sequence KV cache
+  assumes <b>one sequence of one length</b>; a batch whose membership and lengths
+  change every step shatters that single contiguous tensor. That exact mismatch is
+  what <b>PagedAttention</b> solves — a cache manager that hands out fixed-size
+  blocks so ragged, churning sequences share GPU memory without copying. That's the
+  next build.
+</div>
+
+<p>Building this drove home something I hadn't appreciated: inference isn't only
+about the GPU — it's just as much about the framework and software layered above it,
+from tensors up to the scheduler. The batch scheduler packages requests together so
+the GPU's parallel compute actually gets used instead of sitting idle. LLM inference
+used to be a black box to me — I always wondered why inference APIs charge less per
+token for batch requests and cached prompts. Now I understand the machinery behind it.</p>
+
+<p>Full code: <a href="https://github.com/balachidam21/nanogpt-served">github.com/balachidam21/nanogpt-served</a> — feedback welcome.</p>
+</article>
+
+  <script is:inline src="/js/continuous-batching-diagrams.js"></script>
+</BaseLayout>

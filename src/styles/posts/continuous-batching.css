@@ -1,0 +1,111 @@
+/* Extracted verbatim from the original post HTML; :root stripped (lives in tokens.css).
+   Imported as a .css module so Astro keeps it GLOBAL -- scoped styles would not match
+   SVG nodes the diagram script creates at runtime. Do not inline into a <style> block. */
+
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--body);color:var(--text);font-family:var(--sans);
+       line-height:1.75;font-size:17px;-webkit-font-smoothing:antialiased;
+       text-rendering:optimizeLegibility}
+
+  /* ---------- top nav (matches the site) ---------- */
+  .nav{position:sticky;top:0;z-index:100;background:rgba(252,252,255,.82);
+       backdrop-filter:saturate(180%) blur(10px);border-bottom:1px solid var(--line)}
+  .nav_inner{max-width:1080px;margin:0 auto;padding:15px 24px;
+             display:flex;align-items:center;justify-content:space-between}
+  .nav_logo{font-weight:600;font-size:1.1rem;color:var(--title);text-decoration:none;letter-spacing:-.01em}
+  .nav_logo span{color:var(--violet)}
+  .nav_links{display:flex;gap:28px}
+  .nav_links a{color:var(--text);text-decoration:none;font-size:.92rem;font-weight:500;transition:color .15s}
+  .nav_links a:hover,.nav_links a.here{color:var(--violet)}
+  @media(max-width:600px){.nav_links{gap:18px}.nav_links a{font-size:.85rem}}
+
+  /* ---------- article shell ---------- */
+  .article{max-width:720px;margin:0 auto;padding:52px 24px 0}
+  .eyebrow{font-family:var(--mono);font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;
+           color:var(--violet);font-weight:600;margin-bottom:16px}
+  .post-title{font-size:2.5rem;line-height:1.14;letter-spacing:-.025em;color:var(--title);
+              font-weight:700;margin:0 0 18px}
+  .post-sub{font-size:1.17rem;line-height:1.55;color:var(--text-light);font-weight:400;margin:0 0 22px}
+  .post-sub b{color:var(--title);font-weight:600}
+  .post-meta{font-family:var(--mono);font-size:.86rem;color:var(--text-light);
+             padding-bottom:30px;border-bottom:1px solid var(--line)}
+
+  /* ---------- article typography ---------- */
+  .article p{font-size:1.07rem;line-height:1.82;margin:1.2em 0;color:var(--text)}
+  .article b{color:var(--title);font-weight:600}
+  .article em{font-style:italic}
+  .article h2{font-size:1.5rem;line-height:1.25;letter-spacing:-.015em;color:var(--title);
+              font-weight:600;margin:2.5em 0 .5em}
+  .article h2 .n{font-family:var(--mono);color:var(--violet);font-size:.66em;
+                 font-weight:600;margin-right:12px;vertical-align:1px}
+  code.inl{font-family:var(--mono);background:var(--violet-bg);color:var(--violet-alt);
+           padding:1px 6px;border-radius:5px;font-size:.85em}
+  .article a{color:var(--violet);text-decoration:none;border-bottom:1px solid var(--violet-light)}
+  .article a:hover{border-bottom-color:var(--violet)}
+
+  /* ---------- figures: in the flow, no cage ---------- */
+  .panel{margin:34px 0;padding:0}
+  .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  svg{display:block;min-width:340px;max-width:100%;height:auto;margin:4px auto}
+  .cap{font-size:.88rem;line-height:1.55;color:var(--text-light);margin-top:12px;
+       text-align:center;font-style:italic;max-width:600px;margin-left:auto;margin-right:auto}
+  .stepnum{font-family:var(--mono);font-size:12px;fill:var(--muted);text-anchor:middle}
+  .lanelbl{font-family:var(--mono);font-size:12px;fill:var(--ink);text-anchor:start;font-weight:600}
+  .cell-lbl{font-family:var(--mono);font-size:13px;fill:#fff;text-anchor:middle;font-weight:600}
+  .cell-lbl.idle{fill:var(--idle-ink);font-weight:500;font-size:11px}
+  .divider{stroke:var(--accent2);stroke-width:2;stroke-dasharray:5 4}
+  .dlabel{font-family:var(--mono);font-size:11px;fill:var(--accent2);text-anchor:middle}
+  .legend{display:flex;flex-wrap:wrap;gap:12px 22px;font-size:.84rem;
+          font-family:var(--mono);color:var(--text-light);margin:16px 0 2px;justify-content:center}
+  .legend span{display:inline-flex;align-items:center;gap:7px}
+  .sw{width:16px;height:16px;border-radius:4px;display:inline-block}
+  .sw.req{background:linear-gradient(135deg,var(--r1),var(--r4))}
+  .sw.idle{background:var(--idle);border:1px solid #c3c0b8}
+  .sw.none{background:transparent;border:1.5px dashed var(--none)}
+
+  /* ---------- scoreboard table ---------- */
+  .article table{border-collapse:collapse;width:100%;margin:28px 0;font-size:.95rem}
+  .article th,.article td{padding:12px 14px;text-align:right;border-bottom:1px solid var(--line)}
+  .article th:first-child,.article td:first-child{text-align:left}
+  .article thead th{color:var(--text-light);font-weight:600;font-family:var(--mono);
+                    font-size:.8rem;letter-spacing:.02em;border-bottom:2px solid var(--violet-light)}
+  .article tbody td{font-family:var(--mono)}
+  tr.win td{background:var(--violet-bg)}
+  .delta{color:var(--violet);font-weight:700}
+
+  /* ---------- code block ---------- */
+  pre{background:#1b1b22;color:#eaeaea;border-radius:11px;padding:20px 22px;overflow-x:auto;
+      font-family:var(--mono);font-size:.84rem;line-height:1.6;margin:26px 0}
+  pre .c{color:#8c9b86}
+
+  /* ---------- callouts (soft article pull-blocks) ---------- */
+  .keypt{border-left:3px solid var(--violet);background:var(--violet-bg);
+         padding:14px 20px;margin:24px 0;border-radius:0 9px 9px 0;color:var(--title);font-size:1.02rem;line-height:1.7}
+  .keypt b{color:var(--violet)}
+  .next{border-left:3px solid var(--accent2);background:#fbf5f1;
+        padding:14px 20px;margin:24px 0;border-radius:0 9px 9px 0;font-size:1.02rem;line-height:1.7}
+  .next b{color:var(--accent2)}
+
+  /* ---------- site footer band (violet, matches the site) ---------- */
+  .site-footer{background:var(--violet);color:#fff;margin-top:72px;padding:48px 24px 26px}
+  .site-footer_inner{max-width:1080px;margin:0 auto;display:flex;flex-wrap:wrap;
+                     justify-content:space-between;align-items:flex-start;gap:28px}
+  .site-footer h3{margin:0 0 4px;font-size:1.5rem;font-weight:600}
+  .site-footer .role{font-size:.95rem;opacity:.85}
+  .foot-links{display:flex;gap:24px;list-style:none;padding:0;margin:6px 0 0}
+  .foot-links a{color:#fff;opacity:.9;text-decoration:none;font-size:.95rem}
+  .foot-links a:hover{opacity:1}
+  .socials{display:flex;gap:16px;margin-top:4px}
+  .socials a{color:#fff;opacity:.9;display:inline-flex;transition:opacity .15s}
+  .socials a:hover{opacity:1}
+  .socials svg{width:22px;height:22px;fill:currentColor}
+  .copy{max-width:1080px;margin:32px auto 0;text-align:center;font-size:.82rem;opacity:.8;
+        border-top:1px solid rgba(255,255,255,.22);padding-top:18px}
+
+  @media(max-width:760px){
+    .post-title{font-size:1.95rem}
+    .article{padding:34px 18px 0}
+    .article p{font-size:1.02rem}
+    .site-footer_inner{flex-direction:column;gap:18px}
+  }

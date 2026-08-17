@@ -23,6 +23,18 @@
   --idle: #e3e1dc;
   --idle-ink: #9a978f;
   --none: #cfcdc7;
+
+  /* request-series colors — mirrored by the COLORS map in the
+     continuous-batching diagram script. Keep both in sync. */
+  --r1: #4e79a7;
+  --r2: #f28e2b;
+  --r3: #59a14f;
+  --r4: #9c6bb0;
+  --r5: #d0494b;
+
+  /* paged-attention: wasted KV blocks */
+  --waste: #d9d5cd;
+  --waste-ink: #8d8a83;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -41,6 +53,9 @@
     --idle: #2e2c38;
     --idle-ink: #6f6c7d;
     --none: #3a3846;
+    /* series colors stay put — they encode data, not chrome */
+    --waste: #34313d;
+    --waste-ink: #8b8794;
   }
 }
 
