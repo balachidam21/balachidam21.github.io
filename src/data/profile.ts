@@ -5,10 +5,10 @@
 // engagement as "for a healthcare distributor" is the anonymisation pattern the
 // Disclosure Policy rejects: it narrows identification while advertising the omission.
 //
-// CLIENT NAMES ARE DELIBERATELY OMITTED. The source documents name Cardinal Health,
-// HESS, Finance One, Fin.AI and Contract CoPilot; the site describes those engagements
-// without naming them. See the Disclosure Policy in
-// docs/superpowers/specs/2026-08-12-portfolio-rebuild-design.md
+// CLIENT NAMES ARE DELIBERATELY OMITTED, and clients are not characterised either --
+// not by industry, not by size. Naming a client is an obvious leak; describing one as
+// "a healthcare distributor" is a subtler one, because it narrows identification while
+// advertising that something is being withheld. verify-site.mjs enforces both.
 //
 // `summary` bullets drive the homepage (short). `engagements` drive /about (detailed).
 

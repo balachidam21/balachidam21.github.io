@@ -1,6 +1,7 @@
 /* Palette lifted from blog/continuous-batching-from-scratch.html.
    Names are a contract: the migrated post stylesheets reference these by name.
-   Do not rename. See docs/superpowers/specs/2026-08-12-portfolio-rebuild-design.md
+   Do not rename: the migrated post stylesheets and the diagram script reference these
+   names, and a rename fails silently (an unresolved var() renders as nothing).
 
    TWO VALUES ARE DELIBERATELY NOT VERBATIM — both failed WCAG AA and both are consumed
    by the preserved post stylesheets, so restoring the originals would silently regress

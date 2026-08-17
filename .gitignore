@@ -10,3 +10,8 @@ old_version/
 node_modules/
 dist/
 .astro/
+
+# Process docs: spec/plan for the rebuild. Kept locally, never published --
+# they quote client names and a candid skill-gap assessment, neither of which
+# belongs in a public repo. Backup: ~/Documents/Resume/portfolio-rebuild-docs
+docs/superpowers/
