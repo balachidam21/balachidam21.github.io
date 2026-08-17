@@ -1,6 +1,14 @@
 ---
 // One-page print résumé, driven by the same profile.ts as the site so the PDF can
-// never disagree with the pages. Scope deliberately mirrors the user's own one-page
+// never disagree with the pages.
+//
+// History, because the commit trail looks contradictory: this page was deleted in
+// df5a485 in favour of linking the user's own hand-maintained PDF, then reinstated in
+// e04019d. That was not an accident. The hand-maintained PDF gave its location as
+// "Modesto, CA" while cv.md (and therefore every page) says "San Francisco Bay Area",
+// and it had no editable source to correct. The user chose to generate from career-ops
+// data instead. Generating from profile.ts is what makes that contradiction
+// structurally impossible rather than merely fixed once. Scope deliberately mirrors the user's own one-page
 // résumé: Genpact x2, Keck x2, Sayari, education, publication, skills. The research
 // assistantship, the HertzAI internship and the projects live on /about instead —
 // that page is the detailed version, this is the compressed one.

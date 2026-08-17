@@ -194,6 +194,31 @@ for (const f of html) {
   }
 }
 
+// 8d. Every internal link must resolve to something that exists. The migrated
+// PagedAttention post carried a relative href ("continuous-batching-from-scratch.html")
+// that was correct when both posts were flat siblings under /blog/, but 404s now the
+// post lives a directory deeper at /writing/<slug>/. Nothing else caught it.
+const resolveRoute = (href) => {
+  const clean = href.split('#')[0].split('?')[0];
+  if (!clean) return null;
+  if (clean.endsWith('/')) return `${DIST}${clean}index.html`;
+  if (/\.[a-z0-9]+$/i.test(clean)) return `${DIST}${clean}`;
+  return `${DIST}${clean}/index.html`;
+};
+for (const f of html) {
+  const src = readFileSync(f, 'utf8');
+  for (const m of src.matchAll(/href="([^"]+)"/g)) {
+    const href = m[1];
+    if (/^(https?:|mailto:|tel:|data:|#)/.test(href)) continue;
+    if (!href.startsWith('/')) {
+      fail(`${f}: relative internal link "${href}" — use an absolute path, relative links break when routes move`);
+      continue;
+    }
+    const target = resolveRoute(href);
+    if (target && !existsSync(target)) fail(`${f}: internal link "${href}" resolves to missing ${target}`);
+  }
+}
+
 // 9. Legacy template cruft must be gone.
 for (const [pattern, label] of [
   [/skills_percentage|skills__percentage/, 'legacy skill-percentage bars'],
