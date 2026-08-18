@@ -25,6 +25,10 @@ export interface Role {
   location: string;
   summary: string[];
   engagements?: Engagement[];
+  /** Staffing agency of record, when the payroll employer differs from where the work
+   *  was done. Named because employment verification runs against the agency: a résumé
+   *  showing only the client reads as a mismatch when the check comes back. */
+  via?: string;
   /** Include this role in the one-page PDF. Declared here rather than filtered by
    *  company name in resume.astro, where adding a new employer would silently omit it
    *  from the résumé with no error and green CI. */
@@ -144,6 +148,7 @@ export const profile = {
     },
     {
       company: 'Keck Medicine of USC',
+      via: 'Hernandez Information Services',
       resume: true,
       role: 'Data Engineer (Contract)',
       period: 'Feb 2024 – Dec 2024',

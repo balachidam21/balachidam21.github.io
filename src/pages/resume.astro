@@ -62,7 +62,7 @@ const onePage = profile.experience.filter((x) => x.resume);
             <b>{x.company} &mdash; {x.role}</b>
             <span>{x.period}</span>
           </div>
-          <div class="loc">{x.location}</div>
+          <div class="loc">{x.via ? `${x.location} · via ${x.via}` : x.location}</div>
           <ul>{x.summary.map((b) => <li>{b}</li>)}</ul>
         </div>
       ))}

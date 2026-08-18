@@ -47,6 +47,7 @@ import SectionNav from '../components/SectionNav.astro';
           </div>
           <p class="meta">
             <span class="co">{x.company}</span>
+            {x.via && <><span class="sep">·</span><span>via {x.via}</span></>}
             <span class="sep">·</span>
             <span>{x.location}</span>
           </p>
