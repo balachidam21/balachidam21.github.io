@@ -1,0 +1,26 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Not found — Balaji Chidambaram" description="Page not found." noindex={true}>
+  <div class="wrap container">
+    <h1>404</h1>
+    <p>
+      That page doesn’t exist. Try <a href="/">the homepage</a> or{' '}
+      <a href="/writing/">the writing index</a>.
+    </p>
+  </div>
+</BaseLayout>
+
+<style>
+  .wrap {
+    padding-block: 4rem;
+    min-height: 55vh;
+  }
+  h1 {
+    color: var(--title);
+    font-size: 3rem;
+    margin: 0 0 0.5rem;
+    letter-spacing: -0.03em;
+  }
+</style>

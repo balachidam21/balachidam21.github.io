@@ -1,0 +1,124 @@
+---
+// In-page section navigation for long pages.
+//
+// Built client-side from the h2s already in <main>, which is what lets it work on the
+// two migrated posts: their bodies are injected verbatim via set:html, so we cannot
+// add ids at author time without editing preserved markup.
+//
+// Two presentations, one component:
+//   >= 1100px  a fixed rail in the 360px margin beside the 720px column
+//   < 1100px   a sticky, horizontally scrollable strip under the site header
+//
+// Renders nothing when a page has fewer than `min` headings, so short pages are
+// unaffected. Progressive enhancement: with no JS the page is exactly as before.
+
+interface Props {
+  /** Minimum number of h2s before the nav appears at all. */
+  min?: number;
+  /** Label for the landmark. */
+  label?: string;
+}
+import '../styles/section-nav.css';
+
+const { min = 3, label = 'On this page' } = Astro.props;
+---
+
+<nav class="toc" aria-label={label} data-min={min} hidden>
+  <p class="toc-title">{label}</p>
+  <ol class="toc-list"></ol>
+</nav>
+
+<a class="to-top" href="#main" hidden>
+  <span aria-hidden="true">↑</span> Top
+</a>
+
+<script is:inline define:vars={{ min }}>
+  // This script is emitted at the TOP of <main>, so the headings it needs have not
+  // been parsed yet when it first executes. Wait for the document before building.
+  const buildSectionNav = () => {
+    const main = document.querySelector('main');
+    const nav = document.querySelector('.toc');
+    const list = nav?.querySelector('.toc-list');
+    const toTop = document.querySelector('.to-top');
+    if (!main || !nav || !list) return;
+
+    const heads = [...main.querySelectorAll('h2')];
+    if (heads.length < min) return;
+
+    const slug = (t) =>
+      t.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').slice(0, 48) || 'section';
+
+    const used = new Set();
+    const entries = heads.map((h) => {
+      // Post headings look like <h2><span class="n">01</span>Static batching…>.
+      // Use the text after the number chip as the label, and never in the id.
+      const chip = h.querySelector('.n');
+      const text = (chip ? h.textContent.slice(chip.textContent.length) : h.textContent).trim();
+      let id = h.id || slug(text);
+      let n = 2;
+      while (used.has(id)) id = `${slug(text)}-${n++}`;
+      used.add(id);
+      // Assign unconditionally. Previously a heading that already carried a colliding
+      // id kept it while the link got the deduped "-2" form, producing a dead anchor.
+      h.id = id;
+      return { id, text, el: h };
+    });
+
+    list.innerHTML = entries
+      .map((e) => `<li><a href="#${e.id}"><span>${e.text.replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c]))}</span></a></li>`)
+      .join('');
+    nav.hidden = false;
+
+    // scroll-spy: mark the heading nearest the top of the viewport
+    const links = new Map(entries.map((e) => [e.id, list.querySelector(`a[href="#${e.id}"]`)]));
+    let active = null;
+    const setActive = (id) => {
+      if (id === active) return;
+      if (active) links.get(active)?.removeAttribute('aria-current');
+      active = id;
+      links.get(id)?.setAttribute('aria-current', 'true');
+    };
+
+    // Direct calculation rather than IntersectionObserver: a top-band rootMargin can
+    // never match a short FINAL section, so the last item never highlighted once you
+    // reached the bottom. Compute the current section, with an explicit bottom override.
+    const updateActive = () => {
+      const atBottom =
+        window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 8;
+      if (atBottom) {
+        setActive(entries[entries.length - 1].id);
+        return;
+      }
+      const passed = entries.filter((e) => e.el.getBoundingClientRect().top < 140);
+      setActive(passed.length ? passed[passed.length - 1].id : entries[0].id);
+    };
+
+    let ticking = false;
+    const onScrollSpy = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        updateActive();
+        ticking = false;
+      });
+    };
+    updateActive();
+    window.addEventListener('scroll', onScrollSpy, { passive: true });
+    window.addEventListener('resize', onScrollSpy, { passive: true });
+
+    // back-to-top appears once the first screen is behind you
+    if (toTop) {
+      const onScroll = () => {
+        toTop.hidden = window.scrollY < window.innerHeight * 0.75;
+      };
+      onScroll();
+      window.addEventListener('scroll', onScroll, { passive: true });
+    }
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', buildSectionNav);
+  } else {
+    buildSectionNav();
+  }
+</script>

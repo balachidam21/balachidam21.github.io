@@ -1,0 +1,26 @@
+---
+// Legacy post preserved byte-for-byte from blog/continuous-batching-from-scratch.html.
+//
+// The body is imported as a raw string and rendered with set:html rather than pasted
+// inline. Astro parses inline markup as JSX and strips the newline between an inline
+// element and adjacent text, so `<b>slowest</b>\nfinishes` rendered as
+// "slowestfinishes". set:html bypasses that parsing entirely.
+//
+// Styles are imported as a .css module, which Astro keeps GLOBAL. A scoped <style>
+// block would not match the SVG nodes the diagram script creates at runtime.
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import '../../styles/posts/continuous-batching.css';
+import SectionNav from '../../components/SectionNav.astro';
+import body from '../../legacy-posts/continuous-batching.html?raw';
+---
+
+<BaseLayout
+  title="Continuous batching from scratch — Balaji Chidambaram"
+  description="Building a continuous-batching LLM inference scheduler from scratch — why iteration-level scheduling makes serving fast, with timelines and a scoreboard."
+  ogType="article"
+  ogImage="/assets/img/animoji.png"
+>
+  <SectionNav />
+  <Fragment set:html={body} />
+  <script is:inline src="/js/continuous-batching-diagrams.js"></script>
+</BaseLayout>

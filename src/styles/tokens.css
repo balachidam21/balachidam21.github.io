@@ -1,0 +1,144 @@
+/* Palette lifted from blog/continuous-batching-from-scratch.html.
+   Names are a contract: the migrated post stylesheets reference these by name.
+   Do not rename: the migrated post stylesheets and the diagram script reference these
+   names, and a rename fails silently (an unresolved var() renders as nothing).
+
+   TWO VALUES ARE DELIBERATELY NOT VERBATIM — both failed WCAG AA and both are consumed
+   by the preserved post stylesheets, so restoring the originals would silently regress
+   contrast on the posts:
+     --violet-alt  #7d6bd6 -> #5b46b8   (code.inl on --violet-bg was 3.68:1, now 6.04:1)
+     --text-light  55% L   -> 40% L     (body/meta text was 3.60:1, now 6.23:1)
+   Everything else, including the frozen diagram palette, is unchanged. */
+:root {
+  --violet: #6e57e0;
+  --violet-alt: #5b46b8;
+  --violet-light: #c2b6fc;
+  --violet-bg: #f0edfb;
+  --title: hsl(250, 8%, 15%);
+  --text: hsl(250, 9%, 32%);
+  --text-light: hsl(250, 9%, 40%);
+  --body: #fcfcff;
+  --container: #ffffff;
+  --line: #e7e4f2;
+  --sans: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: "SF Mono", ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
+
+  /* diagram palette: FROZEN — migrated post stylesheets reference these by name */
+  --accent: #6e57e0;
+  --accent2: #9a4a2f;
+  --ink: #1c1c1e;
+  --muted: #6b6b70;
+  --idle: #e3e1dc;
+  --idle-ink: #9a978f;
+  --none: #cfcdc7;
+
+  /* request-series colors — mirrored by the COLORS map in the
+     continuous-batching diagram script. Keep both in sync. */
+  --r1: #4e79a7;
+  --r2: #f28e2b;
+  --r3: #59a14f;
+  --r4: #9c6bb0;
+  --r5: #d0494b;
+
+  /* paged-attention: wasted KV blocks */
+  --waste: #d9d5cd;
+  --waste-ink: #8d8a83;
+
+  /* panel backgrounds used by the migrated posts */
+  --panel-warm: #fbf5f1;
+  --panel-cool: #eef7f0;
+  --panel-sand: #fdf6e6;
+  --rung-cool-ink: #3d7a52;
+  --rung-sand-ink: #9a7208;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --title: hsl(250, 10%, 94%);
+    --text: hsl(250, 8%, 78%);
+    --text-light: hsl(250, 6%, 58%);
+    --body: #131218;
+    --container: #1a1922;
+    --line: #2b2936;
+    --violet: #9b86f5;
+    --violet-light: #b9a9fa;
+    --violet-bg: #1e1a33;
+    --ink: #e9e9ee;
+    --muted: #9a97a6;
+    --idle: #2e2c38;
+    --idle-ink: #6f6c7d;
+    --none: #3a3846;
+    /* series colors stay put — they encode data, not chrome */
+    --waste: #34313d;
+    --waste-ink: #8b8794;
+    --violet-alt: #b3a4f2;
+    --accent2: #e0855f;
+    /* legacy post panels were authored light-only; give them dark equivalents */
+    --panel-warm: #241f1c;
+    --panel-cool: #1b241d;
+    --panel-sand: #241f18;
+    --rung-cool-ink: #7fc496;
+    --rung-sand-ink: #d9b354;
+  }
+}
+
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--body);
+  color: var(--text);
+  font-family: var(--sans);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--violet); }
+
+img { max-width: 100%; height: auto; }
+
+/* ONE content width for the whole site. The nav, footer and every page body use
+   this, so the left edge never shifts between routes. 45rem = 720px, which is what
+   the migrated posts' .article already uses, so posts align too. */
+:root { --wrap: 45rem; }
+
+.container { width: min(100% - 2.5rem, var(--wrap)); margin-inline: auto; }
+
+/* Legacy post tables were authored without a scroll wrapper and push the page
+   past the viewport at 375px (measured: 472px scrollWidth at a 375px viewport).
+   Making the table its own scroll container fixes it without touching the post
+   markup, which is preserved verbatim. The diagrams already handle this via
+   their own .scroll wrapper. */
+.article table {
+  display: block;
+  width: max-content;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+/* Anchor targets must clear the sticky section bar on narrow screens, otherwise
+   jumping to a section hides its own heading underneath the bar. */
+h2[id],
+h3[id] { scroll-margin-top: 4.5rem; }
+
+@media (min-width: 1100px) {
+  h2[id],
+  h3[id] { scroll-margin-top: 1.5rem; }
+}
+
+:focus-visible { outline: 2px solid var(--violet); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto !important; }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

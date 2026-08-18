@@ -1,0 +1,111 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { writingIndex, isExternal } from '../../data/writing';
+
+// timeZone: 'UTC' is required -- new Date('2026-01-01') is UTC midnight, which
+// renders as 'Dec 2025' in any negative-offset locale.
+const fmt = (iso: string) =>
+  new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'short', timeZone: 'UTC' });
+---
+
+<BaseLayout
+  title="Writing — Balaji Chidambaram"
+  description="Technical deep-dives on LLM inference internals, agent systems, and peer-reviewed research."
+>
+  <div class="wrap">
+    <header class="head">
+      <h1>Writing</h1>
+      <p class="sub">
+        Inference internals built from scratch and measured, plus published research.
+      </p>
+    </header>
+
+    <ul class="list">
+      {writingIndex.map((e) => (
+        <li class="item">
+          <p class="meta">
+            <time datetime={e.date}>{fmt(e.date)}</time>
+            {e.tags.map((t) => <span class="tag">#{t}</span>)}
+            {e.meta && <span class="venue">{e.meta}</span>}
+          </p>
+          <h2>
+            <a
+              href={e.href}
+              target={isExternal(e.href) ? '_blank' : undefined}
+              rel={isExternal(e.href) ? 'noopener noreferrer' : undefined}
+            >
+              {e.title}{isExternal(e.href) && <span class="ext" aria-label="external link"> ↗</span>}
+            </a>
+          </h2>
+          <p class="desc">{e.description}</p>
+        </li>
+      ))}
+    </ul>
+  </div>
+</BaseLayout>
+
+<style>
+  .wrap {
+    width: min(100% - 2.5rem, var(--wrap));
+    margin-inline: auto;
+    padding-block: 1.5rem 3rem;
+  }
+  .head {
+    margin-bottom: 2.75rem;
+  }
+  h1 {
+    color: var(--title);
+    font-size: clamp(1.8rem, 4vw, 2.2rem);
+    letter-spacing: -0.02em;
+    margin: 0 0 0.5rem;
+  }
+  .sub {
+    color: var(--text-light);
+    margin: 0;
+  }
+  .list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+  }
+  .meta {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    align-items: baseline;
+    color: var(--text-light);
+    font-size: 0.82rem;
+    margin: 0 0 0.4rem;
+  }
+  .tag {
+    color: var(--violet);
+  }
+  .venue {
+    font-style: italic;
+  }
+  .item h2 {
+    font-size: 1.2rem;
+    line-height: 1.4;
+    margin: 0 0 0.5rem;
+    font-weight: 600;
+  }
+  .item h2 a {
+    color: var(--title);
+    text-decoration: none;
+  }
+  .item h2 a:hover {
+    color: var(--violet);
+  }
+  .ext {
+    color: var(--text-light);
+    font-size: 0.85em;
+  }
+  .desc {
+    margin: 0;
+    color: var(--text);
+    font-size: 0.97rem;
+  }
+</style>

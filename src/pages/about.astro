@@ -1,0 +1,391 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { profile } from '../data/profile';
+import SectionNav from '../components/SectionNav.astro';
+---
+
+<BaseLayout
+  title="About — Balaji Chidambaram"
+  description="Principal Consultant, AI Engineer. Full experience, engagements, education, publications and skills."
+>
+  <SectionNav />
+  <div class="container wrap">
+    <header class="head">
+      <img
+        class="headshot"
+        src="/assets/img/headshot.jpg"
+        srcset="/assets/img/headshot-small.jpg 220w, /assets/img/headshot.jpg 440w"
+        sizes="(max-width: 640px) 96px, 120px"
+        width="120"
+        height="120"
+        alt="Balaji Chidambaram"
+        loading="eager"
+        decoding="async"
+      />
+      <h1>About</h1>
+      <p class="lede">{profile.about}</p>
+      <p class="links">
+        <a href="/Resume_Balaji_Chidambaram.pdf" target="_blank" rel="noopener">Download one-page résumé (PDF)</a>
+      </p>
+      <p class="links secondary">
+        <a href={profile.links.github} target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href={profile.links.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn</a>
+        <a href={`mailto:${profile.email}`}>{profile.email}</a>
+      </p>
+      <p class="note">
+        The résumé is compressed to one page. Everything below is the fuller version.
+      </p>
+    </header>
+
+    <section class="block">
+      <h2>Experience</h2>
+      {profile.experience.map((x) => (
+        <article class="job">
+          <div class="job-head">
+            <h3>{x.role}</h3>
+            <span class="period">{x.period}</span>
+          </div>
+          <p class="meta">
+            <span class="co">{x.company}</span>
+            <span class="sep">·</span>
+            <span>{x.location}</span>
+          </p>
+
+          {x.engagements ? (
+            <div class="engagements">
+              {x.engagements.map((e) => (
+                <div class="engagement">
+                  <div class="eng-head">
+                    <b>{e.name}</b>
+                    <i>{e.period}</i>
+                  </div>
+                  <ul class="bullets">
+                    {e.bullets.map((b) => <li>{b}</li>)}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <ul class="bullets">
+              {x.summary.map((b) => <li>{b}</li>)}
+            </ul>
+          )}
+        </article>
+      ))}
+    </section>
+
+    <section class="block">
+      <h2>Publication</h2>
+      <p class="pub">
+        <span>{profile.publication.authors}.</span>{' '}
+        <a href={profile.publication.doi} target="_blank" rel="noopener noreferrer">
+          “{profile.publication.title}”
+        </a>
+        <span class="venue">{profile.publication.venue}</span>
+      </p>
+    </section>
+
+    <section class="block">
+      <h2>Projects</h2>
+      <ul class="projects">
+        {profile.projects.map((p) => (
+          <li>
+            <a href={p.href} target="_blank" rel="noopener noreferrer">{p.name}</a>
+            <p>{p.blurb}</p>
+          </li>
+        ))}
+      </ul>
+    </section>
+
+    <section class="block">
+      <h2>Education</h2>
+      {profile.education.map((e) => (
+        <div class="edu">
+          <div class="job-head">
+            <h3>{e.degree}</h3>
+            <span class="period">{e.period}</span>
+          </div>
+          <p class="meta">
+            <span class="co">{e.school}</span>
+            <span class="sep">·</span>
+            <span>{e.detail}</span>
+          </p>
+        </div>
+      ))}
+    </section>
+
+    <section class="block">
+      <h2>Skills</h2>
+      <dl class="skills">
+        {profile.skills.map((s) => (
+          <div class="skill-row">
+            <dt>{s.label}</dt>
+            <dd>
+              <ul class="chips">
+                {s.items.map((i) => <li>{i}</li>)}
+              </ul>
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+
+    <section class="block">
+      <h2>Certifications</h2>
+      <ul class="certs">
+        {profile.certifications.map((c) => (
+          <li><a href={c.href} target="_blank" rel="noopener noreferrer">{c.name}</a></li>
+        ))}
+      </ul>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .wrap {
+    padding-block: 1.5rem 3rem;
+  }
+  .head {
+    margin-bottom: 2.5rem;
+  }
+  .headshot {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 1rem;
+    border: 3px solid var(--container);
+    box-shadow: 0 0 0 1px var(--line);
+  }
+  h1 {
+    color: var(--title);
+    font-size: clamp(1.8rem, 4vw, 2.2rem);
+    letter-spacing: -0.02em;
+    margin: 0 0 0.8rem;
+  }
+  .lede {
+    margin: 0 0 1.2rem;
+  }
+  .links {
+    display: flex;
+    gap: 1.2rem;
+    flex-wrap: wrap;
+    margin: 0 0 0.5rem;
+  }
+  .links a {
+    color: var(--violet);
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+  }
+  .links a:hover {
+    text-decoration: underline;
+  }
+  .links.secondary a {
+    font-weight: 400;
+  }
+  .note {
+    color: var(--text-light);
+    font-size: 0.85rem;
+    margin: 0.9rem 0 0;
+  }
+
+  .block {
+    padding-block: 1.9rem;
+    border-top: 1px solid var(--line);
+  }
+  .block h2 {
+    color: var(--title);
+    font-size: 1.25rem;
+    margin: 0 0 1.4rem;
+    letter-spacing: -0.01em;
+  }
+
+  .job,
+  .edu {
+    margin-bottom: 2.1rem;
+  }
+  .job:last-child,
+  .edu:last-child {
+    margin-bottom: 0;
+  }
+  .job-head {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+  .job-head h3 {
+    color: var(--title);
+    font-weight: 600;
+    font-size: 1rem;
+    margin: 0;
+  }
+  .period {
+    color: var(--text-light);
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+  /* Company/school are NOT links — do not use the link color for them. */
+  .meta {
+    display: flex;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+    color: var(--text-light);
+    font-size: 0.88rem;
+    margin: 0.15rem 0 0.7rem;
+  }
+  .meta .co {
+    color: var(--text);
+    font-weight: 500;
+  }
+  .meta .sep {
+    opacity: 0.6;
+  }
+
+  .engagements {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    border-left: 2px solid var(--line);
+    padding-left: 1.1rem;
+    margin-left: 0.15rem;
+  }
+  .eng-head {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 0.35rem;
+  }
+  .eng-head b {
+    color: var(--title);
+    font-weight: 600;
+    font-size: 0.94rem;
+  }
+  .eng-head i {
+    color: var(--text-light);
+    font-style: normal;
+    font-size: 0.8rem;
+    white-space: nowrap;
+  }
+
+  .bullets {
+    margin: 0;
+    padding-left: 1.1rem;
+  }
+  .bullets li {
+    margin-bottom: 0.5rem;
+    font-size: 0.94rem;
+  }
+  .bullets li:last-child {
+    margin-bottom: 0;
+  }
+
+  .pub {
+    margin: 0;
+    font-size: 0.94rem;
+  }
+  .pub a {
+    color: var(--violet);
+    text-decoration: none;
+  }
+  .pub a:hover {
+    text-decoration: underline;
+  }
+  .venue {
+    color: var(--text-light);
+    font-style: italic;
+    display: block;
+    margin-top: 0.3rem;
+    font-size: 0.88rem;
+  }
+
+  .projects {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+  }
+  .projects a {
+    color: var(--violet);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.97rem;
+  }
+  .projects a:hover {
+    text-decoration: underline;
+  }
+  .projects p {
+    margin: 0.25rem 0 0;
+    font-size: 0.92rem;
+  }
+
+  .skills {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.15rem;
+  }
+  .skills dt {
+    color: var(--text-light);
+    font-weight: 600;
+    font-size: 0.74rem;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .skills dd {
+    margin: 0;
+  }
+  .chips {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .chips li {
+    background: var(--violet-bg);
+    color: var(--violet-alt);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 0.24rem 0.66rem;
+    font-size: 0.82rem;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+
+  .certs {
+    margin: 0;
+    padding-left: 1.1rem;
+  }
+  .certs li {
+    margin-bottom: 0.5rem;
+    font-size: 0.94rem;
+  }
+  .certs a {
+    color: var(--violet);
+    text-decoration: none;
+  }
+  .certs a:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 640px) {
+    .headshot {
+      width: 96px;
+      height: 96px;
+    }
+    .job-head,
+    .eng-head {
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+  }
+</style>

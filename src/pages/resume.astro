@@ -1,0 +1,163 @@
+---
+// One-page print résumé, driven by the same profile.ts as the site so the PDF can
+// never disagree with the pages.
+//
+// History, because the commit trail looks contradictory: this page was deleted in
+// df5a485 in favour of linking the user's own hand-maintained PDF, then reinstated in
+// e04019d. That was not an accident. The hand-maintained PDF gave its location as
+// "Modesto, CA" while cv.md (and therefore every page) says "San Francisco Bay Area",
+// and it had no editable source to correct. The user chose to generate from career-ops
+// data instead. Generating from profile.ts is what makes that contradiction
+// structurally impossible rather than merely fixed once. Scope deliberately mirrors the user's own one-page
+// résumé: Genpact x2, Keck x2, Sayari, education, publication, skills. The research
+// assistantship, the HertzAI internship and the projects live on /about instead —
+// that page is the detailed version, this is the compressed one.
+//
+// Regenerate the PDF after changing this file:
+//   npm run build
+//   node ~/Documents/career-ops/generate-pdf.mjs \
+//     dist/resume/index.html ~/Documents/career-ops/output/Resume_Balaji_Chidambaram.pdf --format=letter
+//   cp ~/Documents/career-ops/output/Resume_Balaji_Chidambaram.pdf public/
+//   npm run build
+// This page is a standalone document that bypasses BaseLayout, so it must import the
+// font itself. Without this the PDF renders in Poppins only if Poppins happens to be
+// installed on the generating machine, and silently falls back otherwise.
+import '@fontsource/poppins/400.css';
+import '@fontsource/poppins/500.css';
+import '@fontsource/poppins/600.css';
+import { profile } from '../data/profile';
+
+const onePage = profile.experience.filter((x) => x.resume);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{profile.name} — Résumé</title>
+    <meta name="robots" content="noindex" />
+  </head>
+  <body>
+    <header class="head">
+      <h1>{profile.name}</h1>
+      <p class="contact">
+        {profile.phone} &nbsp;|&nbsp; {profile.location} &nbsp;|&nbsp;
+        <a href={`mailto:${profile.email}`}>{profile.email}</a> &nbsp;|&nbsp;
+        <a href={profile.links.linkedin}>linkedin.com/in/balaji-chidam</a> &nbsp;|&nbsp;
+        <a href="https://balachidam21.github.io">balachidam21.github.io</a>
+      </p>
+    </header>
+
+    <section>
+      <h2>Summary</h2>
+      <p class="summary">{profile.resumeSummary}</p>
+    </section>
+
+    <section>
+      <h2>Experience</h2>
+      {onePage.map((x) => (
+        <div class="entry">
+          <div class="entry-head">
+            <b>{x.company} &mdash; {x.role}</b>
+            <span>{x.period}</span>
+          </div>
+          <div class="loc">{x.location}</div>
+          <ul>{x.summary.map((b) => <li>{b}</li>)}</ul>
+        </div>
+      ))}
+    </section>
+
+    <section>
+      <h2>Education</h2>
+      {profile.education.map((e) => (
+        <div class="entry tight">
+          <div class="entry-head">
+            <b>{e.degree} &mdash; {e.school}</b>
+            <span>{e.period}</span>
+          </div>
+          <div class="loc">{e.detail}</div>
+        </div>
+      ))}
+    </section>
+
+    <section>
+      <h2>Publication</h2>
+      <p class="pub">
+        {profile.publication.authors}. &ldquo;{profile.publication.title}.&rdquo;{' '}
+        <i>{profile.publication.venue}</i>. <a href={profile.publication.doi}>DOI: 10.1109/ACDSA67686.2026.11467982</a>
+      </p>
+    </section>
+
+    <section>
+      <h2>Skills</h2>
+      <ul class="tight-list">
+        {profile.skills
+          .filter((s) => (s.resumeCount ?? s.items.length) > 0)
+          .map((s) => (
+            <li><b>{s.label}:</b> {s.items.slice(0, s.resumeCount ?? s.items.length).join(', ')}</li>
+          ))}
+        <li>
+          <b>Certifications:</b>{' '}
+          {profile.certifications.map((c, i) => (
+            <>{i > 0 && ', '}<a href={c.href}>{c.name}</a></>
+          ))}
+        </li>
+      </ul>
+    </section>
+  </body>
+</html>
+
+<style is:global>
+  @page {
+    size: letter;
+    margin: 11mm 12mm;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size: 7.8pt;
+    line-height: 1.2;
+    color: #1a1a1e;
+    background: #fff;
+  }
+  a { color: #3f34a0; text-decoration: none; }
+  .head { margin-bottom: 5pt; text-align: center; }
+  h1 {
+    font-size: 14.5pt;
+    margin: 0 0 2pt;
+    letter-spacing: 0.02em;
+    color: #12111a;
+    font-weight: 600;
+  }
+  .contact { margin: 0; font-size: 8pt; color: #33313c; }
+  .summary { margin: 0; font-size: 7.8pt; }
+  section { margin-top: 4.5pt; }
+  h2 {
+    font-size: 8.4pt;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #3f34a0;
+    border-bottom: 0.7pt solid #b9b1e0;
+    padding-bottom: 1.5pt;
+    margin: 0 0 4pt;
+    font-weight: 600;
+  }
+  .entry { margin-bottom: 4pt; break-inside: avoid; }
+  .entry.tight { margin-bottom: 3pt; }
+  .entry-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 8pt;
+    align-items: baseline;
+  }
+  .entry-head b { font-weight: 600; }
+  .entry-head span { color: #4c4956; font-size: 8pt; white-space: nowrap; }
+  .loc { color: #66636f; font-size: 7.6pt; margin-bottom: 1pt; }
+  ul { margin: 1pt 0 0; padding-left: 11pt; }
+  li { margin-bottom: 1pt; }
+  .tight-list { margin: 0; padding-left: 11pt; }
+  .tight-list li { margin-bottom: 2pt; }
+  .pub { margin: 0; font-size: 7.8pt; }
+</style>

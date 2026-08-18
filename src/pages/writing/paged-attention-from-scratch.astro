@@ -1,0 +1,19 @@
+---
+// Legacy post preserved byte-for-byte from blog/paged-attention-from-scratch.html.
+// Rendered via set:html for the same whitespace reason as the sibling post.
+// No diagram script — this post's SVG is static markup.
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import '../../styles/posts/paged-attention.css';
+import SectionNav from '../../components/SectionNav.astro';
+import body from '../../legacy-posts/paged-attention.html?raw';
+---
+
+<BaseLayout
+  title="PagedAttention from scratch — Balaji Chidambaram"
+  description="Building PagedAttention by hand — block allocator, gather kernel, and preemption policy — measured: 84.6% of the KV pool wasted by naive reservation drops to 2.8%."
+  ogType="article"
+  ogImage="/assets/img/animoji.png"
+>
+  <SectionNav />
+  <Fragment set:html={body} />
+</BaseLayout>
